@@ -1,0 +1,334 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+  RESCHEDULED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum ServiceCategory {
+  COSMETIC
+  ORTHODONTICS
+  PEDIATRIC
+  ORAL_SURGERY
+  PREVENTIVE
+  EMERGENCY
+  IMPLANTS
+  GENERAL
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// ─── CORE MODELS ─────────────────────────────────────────
+
+model Doctor {
+  id                String        @id @default(cuid())
+  slug              String        @unique
+  firstName         String
+  lastName          String
+  email             String        @unique
+  phone             String?
+  avatarUrl         String?
+  bio               String?
+  qualification     String        // "BDS, MDS"
+  specialization    String        // "Orthodontist"
+  experience        Int           // years
+  rating            Float         @default(5.0)
+  reviewCount       Int           @default(0)
+  isActive          Boolean       @default(true)
+  isFeatured        Boolean       @default(false)
+  consultationFee   Decimal       @db.Decimal(10, 2)
+  languages         String[]      @default(["English", "Telugu", "Hindi"])
+  socialLinks       Json?         // { instagram, linkedin, twitter }
+  metaTitle         String?
+  metaDescription   String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  services          DoctorService[]
+  availability      DoctorAvailability[]
+  appointments      Appointment[]
+  reviews           Review[]
+  blogs             Blog[]
+
+  @@index([isActive, isFeatured])
+  @@index([specialization])
+}
+
+model DoctorAvailability {
+  id          String    @id @default(cuid())
+  doctorId    String
+  dayOfWeek   DayOfWeek
+  startTime   String    // "09:00"
+  endTime     String    // "17:00"
+  slotMinutes Int       @default(30)
+  isAvailable Boolean   @default(true)
+  doctor      Doctor    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, dayOfWeek])
+}
+
+model Service {
+  id                String          @id @default(cuid())
+  slug              String          @unique
+  name              String
+  shortDescription  String
+  fullDescription   String
+  category          ServiceCategory
+  imageUrl          String?
+  iconName          String?         // Lucide icon name
+  duration          Int             // minutes (average)
+  priceMin          Decimal?        @db.Decimal(10, 2)
+  priceMax          Decimal?        @db.Decimal(10, 2)
+  isActive          Boolean         @default(true)
+  isFeatured        Boolean         @default(false)
+  sortOrder         Int             @default(0)
+  symptoms          String[]
+  benefits          String[]
+  recoveryTime      String?         // "1-2 days"
+  faqs              Json?           // [{ question, answer }]
+  metaTitle         String?
+  metaDescription   String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relations
+  doctors           DoctorService[]
+  appointments      Appointment[]
+  beforeAfterImages BeforeAfterImage[]
+
+  @@index([category, isActive])
+  @@index([isFeatured])
+}
+
+model DoctorService {
+  doctorId  String
+  serviceId String
+  doctor    Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([doctorId, serviceId])
+}
+
+model Patient {
+  id            String        @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String
+  phone         String
+  dateOfBirth   DateTime?
+  gender        Gender?
+  address       String?
+  bloodGroup    String?
+  allergies     String[]      @default([])
+  notes         String?
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  appointments  Appointment[]
+  reviews       Review[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+model Appointment {
+  id                String            @id @default(cuid())
+  bookingRef        String            @unique  // "BS-2024-001234"
+  patientId         String
+  doctorId          String
+  serviceId         String
+  appointmentDate   DateTime
+  startTime         String            // "14:00"
+  endTime           String            // "14:30"
+  status            AppointmentStatus @default(PENDING)
+  notes             String?
+  chiefComplaint    String?
+  isFirstVisit      Boolean           @default(false)
+  insuranceProvider String?
+  cancelReason      String?
+  reminderSentAt    DateTime?
+  confirmedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  patient           Patient           @relation(fields: [patientId], references: [id])
+  doctor            Doctor            @relation(fields: [doctorId], references: [id])
+  service           Service           @relation(fields: [serviceId], references: [id])
+
+  @@index([appointmentDate, status])
+  @@index([patientId])
+  @@index([doctorId, appointmentDate])
+  @@index([bookingRef])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  patientId   String
+  doctorId    String?
+  rating      Int      // 1-5
+  title       String?
+  content     String
+  isVerified  Boolean  @default(false)
+  isPublished Boolean  @default(false)
+  source      String   @default("website") // website, google
+  createdAt   DateTime @default(now())
+
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  doctor      Doctor?  @relation(fields: [doctorId], references: [id])
+
+  @@index([isPublished, rating])
+  @@index([doctorId])
+}
+
+model Blog {
+  id               String     @id @default(cuid())
+  slug             String     @unique
+  title            String
+  excerpt          String
+  content          String     // HTML from Tiptap
+  featuredImageUrl String?
+  authorId         String
+  category         String
+  tags             String[]   @default([])
+  status           BlogStatus @default(DRAFT)
+  readTimeMinutes  Int        @default(5)
+  viewCount        Int        @default(0)
+  metaTitle        String?
+  metaDescription  String?
+  publishedAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  author           Doctor     @relation(fields: [authorId], references: [id])
+
+  @@index([status, publishedAt])
+  @@index([category])
+  @@index([slug])
+}
+
+model GalleryImage {
+  id          String   @id @default(cuid())
+  url         String
+  thumbUrl    String
+  caption     String?
+  category    String   // clinic, team, operations, events
+  altText     String
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([category, isPublished])
+}
+
+model BeforeAfterImage {
+  id          String   @id @default(cuid())
+  serviceId   String
+  beforeUrl   String
+  afterUrl    String
+  caption     String?
+  patientNote String?
+  isPublished Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  service     Service  @relation(fields: [serviceId], references: [id])
+
+  @@index([serviceId, isPublished])
+}
+
+model ContactSubmission {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  subject    String
+  message    String
+  isRead     Boolean  @default(false)
+  isResolved Boolean  @default(false)
+  notes      String?  // admin notes
+  createdAt  DateTime @default(now())
+
+  @@index([isRead, createdAt])
+}
+
+model ClinicHoliday {
+  id    String   @id @default(cuid())
+  date  DateTime @unique
+  name  String
+  type  String   @default("holiday") // holiday, maintenance
+
+  @@index([date])
+}
+
+model InsuranceProvider {
+  id        String  @id @default(cuid())
+  name      String
+  logoUrl   String?
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("admin") // admin, superadmin
+  isActive     Boolean  @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime @default(now())
+}
+
+model SiteSettings {
+  id              String @id @default("singleton")
+  clinicName      String
+  tagline         String?
+  phone           String
+  emergencyPhone  String
+  email           String
+  address         String
+  city            String
+  mapLat          Float
+  mapLng          Float
+  socialLinks     Json   // { whatsapp, instagram, facebook, youtube }
+  seoTitle        String?
+  seoDescription  String?
+  analyticsId     String?
+  updatedAt       DateTime @updatedAt
+}
