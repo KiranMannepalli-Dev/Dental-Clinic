@@ -69,7 +69,7 @@ export async function getAvailableSlots(doctorId: string, date: string): Promise
     select: { startTime: true }
   });
   
-  const bookedTimes = new Set(booked.map(a => a.startTime));
+  const bookedTimes = new Set(booked.map((a: { startTime: string }) => a.startTime));
 
   const available = allSlots.filter(slot => {
     if (bookedTimes.has(slot)) return false;
