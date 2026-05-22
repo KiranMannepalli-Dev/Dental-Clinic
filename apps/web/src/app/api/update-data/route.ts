@@ -3,18 +3,29 @@ import fs from 'fs';
 import path from 'path';
 
 export async function POST(request: Request) {
+  // Vercel and most serverless platforms have a read-only filesystem.
+  // Writing to local files is not supported in production.
+  // To enable data persistence, connect a database or use a service like Vercel KV / Supabase.
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { 
+        error: 'File system writes are not supported in production (serverless environment). Please connect a database to enable dynamic data updates.',
+        code: 'READONLY_FILESYSTEM'
+      },
+      { status: 501 }
+    );
+  }
+
+  // Development only: write to local JSON file
   try {
     const data = await request.json();
     const filePath = path.join(process.cwd(), 'src/data/website-data.json');
     
-    // Validate we actually received data before writing
     if (!data || typeof data !== 'object') {
       return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
     }
 
-    // Write the new data back to the JSON file
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-    
     return NextResponse.json({ success: true, message: 'Data updated successfully' });
   } catch (error) {
     console.error('Error updating data:', error);
