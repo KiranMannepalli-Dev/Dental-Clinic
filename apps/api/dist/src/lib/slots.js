@@ -61,7 +61,7 @@ async function getAvailableSlots(doctorId, date) {
         },
         select: { startTime: true }
     });
-    const bookedTimes = new Set(booked.map(a => a.startTime));
+    const bookedTimes = new Set(booked.map((a) => a.startTime));
     const available = allSlots.filter(slot => {
         if (bookedTimes.has(slot))
             return false;
