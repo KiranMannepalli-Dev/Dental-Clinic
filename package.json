@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "generate": "pnpm --filter api run generate",
-    "build": "pnpm run generate && pnpm -r run build",  },
+    "build": "pnpm run generate && pnpm -r run build"
+  },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "turbo": "^2.9.14"

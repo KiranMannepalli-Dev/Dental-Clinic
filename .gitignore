@@ -37,4 +37,4 @@ yarn-error.log*
 
 # OS
 Thumbs.db
-!apps/api/.env
+apps/api/.env
