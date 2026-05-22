@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://dental-clinic-f13d.onrender.com"
+  }
+}
