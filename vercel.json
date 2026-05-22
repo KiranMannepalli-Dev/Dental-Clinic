@@ -2,31 +2,16 @@
   "version": 2,
   "builds": [
     {
-      "src": "apps/api/src/routes/**/*.ts",
-      "use": "@vercel/node"
-    },
-    {
       "src": "apps/web/next.config.mjs",
       "use": "@vercel/next"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "apps/api/src/routes/$1.ts"
-    },
-    {
       "src": "/(.*)",
       "dest": "apps/web/$1"
     }
   ],
-  "ignore": ["apps/api/src/server.ts"],
-  "env": {
-    "DATABASE_URL": "@supabase_database_url",
-    "SUPABASE_URL": "@supabase_url",
-    "SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "REDIS_URL": "@redis_url",
-    "JWT_SECRET": "@jwt_secret",
-    "FRONTEND_URL": "https://<YOUR_RENDOR_FRONTEND_URL>"
-  }
+  "ignore": [],
+  "env": {}
 }
