@@ -1,5 +1,6 @@
 {
   "version": 2,
+
   "builds": [
     {
       "src": "apps/web/package.json",
@@ -12,6 +13,8 @@
       "dest": "apps/web/$1"
     }
   ],
-  "ignore": [],
-  "env": {}
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://dental-clinic-f13d.onrender.com"
+  },
+  "buildCommand": "pnpm --filter web run build"
 }
