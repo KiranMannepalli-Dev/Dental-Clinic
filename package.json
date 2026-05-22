@@ -3,15 +3,15 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
-    "build": "turbo run build",
-    "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
-    "test:api": "turbo run test:api",
-    "db:migrate": "turbo run db:migrate",
-    "db:seed": "turbo run db:seed",
-    "db:studio": "turbo run db:studio",
-    "db:reset": "turbo run db:reset"
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "test:api": "pnpm --filter api test",
+    "db:migrate": "pnpm --filter api run db:migrate",
+    "db:seed": "pnpm --filter api run db:seed",
+    "db:studio": "pnpm --filter api run db:studio",
+    "db:reset": "pnpm --filter api run db:reset"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
