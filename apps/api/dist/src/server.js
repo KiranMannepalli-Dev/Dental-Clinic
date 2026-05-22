@@ -4,9 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
-const path_1 = __importDefault(require("path"));
-// Load environment variables
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
+if (process.env.NODE_ENV !== 'production') {
+    dotenv_1.default.config({ path: require('path').resolve(__dirname, '../../.env') });
+}
 const app_1 = __importDefault(require("./app"));
 const database_1 = require("./config/database");
 const PORT = process.env.PORT || 4000;
