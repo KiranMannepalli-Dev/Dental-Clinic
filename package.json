@@ -2,17 +2,8 @@
   "name": "brightsmile",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
-    "build": "pnpm -r run build",
-    "lint": "pnpm -r run lint",
-    "typecheck": "pnpm -r run typecheck",
-    "test": "pnpm -r run test",
-    "test:api": "pnpm --filter api test",
-    "db:migrate": "pnpm --filter api run db:migrate",
-    "db:seed": "pnpm --filter api run db:seed",
-    "db:studio": "pnpm --filter api run db:studio",
-    "db:reset": "pnpm --filter api run db:reset"
-  },
+    "generate": "pnpm --filter api run generate",
+    "build": "pnpm run generate && pnpm -r run build",  },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "turbo": "^2.9.14"
