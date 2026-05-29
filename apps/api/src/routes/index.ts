@@ -6,6 +6,13 @@ import publicServices from './public/services';
 import adminAuth from './admin/auth';
 import adminDashboard from './admin/dashboard';
 import adminAppointments from './admin/appointments';
+import adminDoctors from './admin/doctors';
+import adminServices from './admin/services';
+import adminBlogs from './admin/blogs';
+import adminGallery from './admin/gallery';
+import adminReviews from './admin/reviews';
+import adminContacts from './admin/contacts';
+import adminSettings from './admin/settings';
 
 const router = Router();
 
@@ -18,5 +25,12 @@ router.use('/public/services', publicServices);
 router.use('/admin/auth', adminAuth);
 router.use('/admin/dashboard', adminDashboard);
 router.use('/admin/appointments', adminAppointments);
+router.use('/admin/doctors', adminDoctors);
+router.use('/admin/services', adminServices);
+router.use('/admin/blogs', adminBlogs);
+router.use('/admin/gallery', adminGallery);
+router.use('/admin/reviews', adminReviews);
+router.use('/admin/contacts', adminContacts);
+router.use('/admin/settings', adminSettings);
 
 export default router;
