@@ -39,11 +39,11 @@ export function Navbar() {
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-6 md:px-12 lg:px-16 xl:px-24">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <img src="/logo.png" alt="Heshvitha Dental Logo" className="h-10 w-auto object-contain" />
+        <Link href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <img src="/logo.png" alt="Heshvitha Dental Logo" className="h-9 sm:h-10 w-auto object-contain" />
           <div className="flex flex-col leading-none">
-            <span className="text-lg font-semibold tracking-tight text-slate-900">Heshvitha Multi speciality Dental</span>
-            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Dental Hospital</span>
+            <span className="text-xs sm:text-lg font-semibold tracking-tight text-slate-900 max-w-[150px] min-[400px]:max-w-[220px] sm:max-w-none truncate sm:overflow-visible">Heshvitha Multi speciality Dental</span>
+            <span className="text-[8px] min-[400px]:text-[9px] sm:text-[10px] font-medium text-slate-500 uppercase tracking-widest">Dental Hospital</span>
           </div>
         </Link>
 

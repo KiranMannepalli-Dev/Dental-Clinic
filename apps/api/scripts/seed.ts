@@ -96,12 +96,14 @@ async function main() {
   console.log(`Seeded ${SERVICES.length} services.`);
 
   // Upsert Admin
-  const adminEmail = "admin@brightsmile.com";
-  const passwordHash = await bcrypt.hash("admin123", 10);
+  const adminEmail = "kiran.mannepalli.in@gmail.com";
+  const passwordHash = await bcrypt.hash("Hesvitha@_02", 10);
   
   await prisma.admin.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: {
+      passwordHash: passwordHash
+    },
     create: {
       name: "Super Admin",
       email: adminEmail,
@@ -109,7 +111,7 @@ async function main() {
       role: "SUPER_ADMIN"
     }
   });
-  console.log('Seeded super admin: admin@brightsmile.com (pw: admin123)');
+  console.log('Seeded super admin: kiran.mannepalli.in@gmail.com (pw: Hesvitha@_02)');
 
   console.log('Seeding finished.');
 }

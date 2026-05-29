@@ -61,12 +61,12 @@ export function BeforeAfterSection() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
+        <div className="flex overflow-x-auto gap-2 pb-3 mb-12 md:flex-wrap md:justify-center md:pb-0 scrollbar-none snap-x snap-mandatory [-webkit-overflow-scrolling:touch]">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveTab(cat)}
-              className={`px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-5 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer snap-start shrink-0 ${
                 activeTab === cat 
                   ? "bg-slate-900 text-white" 
                   : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"

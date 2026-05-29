@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "generate": "pnpm --filter api run generate",
+    "dev": "turbo run dev",
     "build": "pnpm run generate && pnpm -r run build"
   },
   "devDependencies": {

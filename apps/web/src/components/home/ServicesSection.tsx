@@ -66,12 +66,12 @@ export function ServicesSection() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
+        <div className="flex overflow-x-auto gap-2 pb-3 mb-8 md:flex-wrap md:justify-center md:pb-0 scrollbar-none snap-x snap-mandatory [-webkit-overflow-scrolling:touch]">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveTab(cat)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer snap-start shrink-0 ${
                 activeTab === cat 
                   ? "bg-blue-600 text-white shadow-sm" 
                   : "bg-white text-slate-655 hover:bg-slate-50 border border-slate-200"

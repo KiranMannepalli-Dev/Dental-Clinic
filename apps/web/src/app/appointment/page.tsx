@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PageHero } from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronRight, User, Calendar as CalendarIcon, Clock as ClockIcon, ArrowLeft, Stethoscope } from "lucide-react";
+import { Check, ChevronRight, User, Calendar as CalendarIcon, Clock as ClockIcon, ArrowLeft, Stethoscope, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { services } from "@/data/services";
 
@@ -42,6 +42,14 @@ export default function AppointmentPage() {
     preferredContact: "Phone",
   });
 
+  const [dbServices, setDbServices] = useState<any[]>([]);
+  const [dbDoctors, setDbDoctors] = useState<any[]>([]);
+  const [dbSlots, setDbSlots] = useState<string[]>([]);
+  const [bookingRef, setBookingRef] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -52,6 +60,55 @@ export default function AppointmentPage() {
       }
     }
   }, []);
+
+  // Fetch services and doctors
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [servicesRes, doctorsRes] = await Promise.all([
+          fetch(`${API_URL}/public/services`),
+          fetch(`${API_URL}/public/doctors`)
+        ]);
+        if (servicesRes.ok) {
+          const sData = await servicesRes.json();
+          if (sData.success && sData.data) {
+            setDbServices(sData.data);
+          }
+        }
+        if (doctorsRes.ok) {
+          const dData = await doctorsRes.json();
+          if (dData.success && dData.data) {
+            setDbDoctors(dData.data);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch from API, falling back to static local data", err);
+      }
+    }
+    loadData();
+  }, [API_URL]);
+
+  // Fetch available slots
+  useEffect(() => {
+    if (!selectedDoctor || !selectedDate) {
+      setDbSlots([]);
+      return;
+    }
+    async function loadSlots() {
+      try {
+        const res = await fetch(`${API_URL}/public/appointments/slots?doctorId=${selectedDoctor}&date=${selectedDate}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data) {
+            setDbSlots(data.data);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch slots from API, falling back to static times", err);
+      }
+    }
+    loadSlots();
+  }, [selectedDoctor, selectedDate, API_URL]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -65,18 +122,104 @@ export default function AppointmentPage() {
     }));
   };
 
-  const handleBookingSubmit = () => {
-    setIsSubmitting(true);
-    // Simulate API delay for a smooth experience
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 1500);
+  // Convert 12-hour slot (e.g. "09:00 AM") to 24-hour format (e.g. "09:00") for the backend
+  const convertTo24Hour = (time12h: string) => {
+    if (!time12h.includes("AM") && !time12h.includes("PM")) return time12h; // already 24h
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (hours === '12') {
+      hours = '00';
+    }
+    if (modifier === 'PM') {
+      hours = (parseInt(hours, 10) + 12).toString();
+    }
+    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
   };
 
-  const selectedServiceObj = services.find(s => s.id === selectedService);
-  const selectedDoctorObj = doctors.find(d => d.id === selectedDoctor);
+  // Format 24-hour slot (e.g. "14:00") to 12-hour format (e.g. "02:00 PM") for display
+  const formatTime12Hour = (time24: string) => {
+    if (time24.includes("AM") || time24.includes("PM")) return time24;
+    const [hoursStr, minutesStr] = time24.split(":");
+    const hours = parseInt(hoursStr, 10);
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${displayHours.toString().padStart(2, "0")}:${minutesStr} ${ampm}`;
+  };
+
+  const handleBookingSubmit = async () => {
+    setIsSubmitting(true);
+    setErrorMsg("");
+    try {
+      const startTime24 = convertTo24Hour(selectedTime || "");
+      const bookingPayload = {
+        serviceId: selectedService,
+        doctorId: selectedDoctor,
+        appointmentDate: selectedDate,
+        startTime: startTime24,
+        patient: {
+          firstName: patientData.firstName,
+          lastName: patientData.lastName,
+          email: patientData.email,
+          phone: patientData.phone,
+          isFirstVisit: patientData.isFirstVisit,
+          chiefComplaint: patientData.chiefComplaint
+        }
+      };
+
+      const res = await fetch(`${API_URL}/public/appointments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingPayload)
+      });
+
+      const resJson = await res.json();
+      if (!res.ok) {
+        throw new Error(resJson.error?.message || "Failed to book appointment. Please try again.");
+      }
+
+      setBookingRef(resJson.data.bookingRef);
+      setIsSuccess(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err: any) {
+      console.error("Booking error:", err);
+      setErrorMsg(err.message || "Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const displayedServices = dbServices.length > 0
+    ? dbServices.map(s => {
+        const localSvc = services.find(ls => ls.slug === s.slug || ls.id === s.id);
+        return {
+          id: s.id,
+          name: s.name,
+          title: s.name,
+          slug: s.slug,
+          shortDesc: s.shortDescription,
+          icon: localSvc?.icon || Stethoscope,
+          image: s.imageUrl || localSvc?.image || "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=800&q=80"
+        };
+      })
+    : services;
+
+  const displayedDoctors = dbDoctors.length > 0
+    ? dbDoctors.map(d => {
+        const localDoc = doctors.find(ld => ld.id === d.id || ld.id === d.slug);
+        return {
+          id: d.id,
+          name: `Dr. ${d.firstName} ${d.lastName}`,
+          specialization: d.specialization,
+          image: d.avatarUrl || localDoc?.image || "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop&crop=faces",
+          slug: d.slug
+        };
+      })
+    : doctors;
+
+  const displayedSlots = dbSlots.length > 0 ? dbSlots : timeSlots;
+
+  const selectedServiceObj = displayedServices.find(s => s.id === selectedService);
+  const selectedDoctorObj = displayedDoctors.find(d => d.id === selectedDoctor);
 
   // Success State
   if (isSuccess) {
@@ -100,7 +243,7 @@ export default function AppointmentPage() {
             <div className="bg-slate-50 p-6 rounded-lg text-left border border-slate-200 mb-8 space-y-5">
               <div>
                 <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Booking Reference</p>
-                <p className="font-mono font-bold text-lg text-blue-600">BS-{Math.floor(100000 + Math.random() * 900000)}</p>
+                <p className="font-mono font-bold text-lg text-blue-600">{bookingRef || `BS-${Math.floor(100000 + Math.random() * 900000)}`}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-5 border-t border-slate-200">
@@ -173,6 +316,13 @@ export default function AppointmentPage() {
           {/* Form Container */}
           <div className="bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-200 p-6 md:p-10 min-h-[500px] flex flex-col relative max-w-4xl mx-auto">
 
+            {/* Mobile Step Indicator */}
+            <div className="sm:hidden mb-6 text-center">
+              <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50/80 px-3.5 py-1.5 rounded-full">
+                Step {currentStep} of {steps.length}: {steps[currentStep - 1]}
+              </span>
+            </div>
+
             {/* Step 1: Services */}
             {currentStep === 1 && (
               <div className="flex-grow animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -182,7 +332,7 @@ export default function AppointmentPage() {
                 </div>
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {services.map((service) => (
+                  {displayedServices.map((service) => (
                     <button
                       key={service.id}
                       onClick={() => { setSelectedService(service.id); setCurrentStep(2); }}
@@ -218,14 +368,14 @@ export default function AppointmentPage() {
                     <div className="inline-flex items-baseline gap-1.5 bg-blue-50 border border-blue-100 px-4 py-2.5 rounded-lg shrink-0 w-max sm:mt-6">
                       <span className="text-sm font-medium text-slate-600">Service Type :</span>
                       <span className="text-sm font-bold text-blue-700">
-                        {services.find(s => s.id === selectedService || s.slug === selectedService)?.name || selectedService}
+                        {displayedServices.find(s => s.id === selectedService || s.slug === selectedService)?.name || selectedService}
                       </span>
                     </div>
                   )}
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
-                  {doctors.map((doctor) => (
+                  {displayedDoctors.map((doctor) => (
                     <button
                       key={doctor.id}
                       onClick={() => { setSelectedDoctor(doctor.id); setCurrentStep(3); }}
@@ -279,7 +429,7 @@ export default function AppointmentPage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-3 gap-3">
-                        {timeSlots.map((slot) => (
+                        {displayedSlots.map((slot) => (
                           <button
                             key={slot}
                             onClick={() => setSelectedTime(slot)}
@@ -288,7 +438,7 @@ export default function AppointmentPage() {
                                 ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-600/20"
                                 : "bg-white text-slate-700 border-slate-200 hover:border-blue-400 hover:text-blue-600"}`}
                           >
-                            {slot}
+                            {formatTime12Hour(slot)}
                           </button>
                         ))}
                       </div>
@@ -386,7 +536,7 @@ export default function AppointmentPage() {
                         <div>
                           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date & Time</p>
                           <p className="font-bold text-slate-900">{selectedDate}</p>
-                          <p className="text-sm font-semibold text-blue-600">{selectedTime}</p>
+                          <p className="text-sm font-semibold text-blue-600">{selectedTime ? formatTime12Hour(selectedTime) : ""}</p>
                         </div>
                       </div>
                       <button onClick={() => setCurrentStep(3)} className="text-blue-600 text-xs font-bold hover:underline cursor-pointer">Edit</button>
@@ -412,53 +562,61 @@ export default function AppointmentPage() {
             )}
 
             {/* Navigation Footer */}
-            <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-100">
-              <Button
-                variant="ghost"
-                onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
-                disabled={currentStep === 1 || isSubmitting}
-                className="text-slate-500 hover:text-slate-900 h-11 px-4 rounded-lg font-medium cursor-pointer"
-              >
-                {currentStep > 1 && <ArrowLeft className="w-4 h-4 mr-2" />} Back
-              </Button>
-
-              {currentStep < steps.length ? (
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700 rounded-lg px-8 h-11 text-sm font-bold shadow-sm cursor-pointer"
-                  onClick={() => {
-                    if (currentStep === 1 && !selectedService) return;
-                    if (currentStep === 2 && !selectedDoctor) return;
-                    if (currentStep === 3 && (!selectedDate || !selectedTime)) return;
-                    if (currentStep === 4 && (!patientData.firstName || !patientData.lastName || !patientData.email || !patientData.phone)) return;
-                    setCurrentStep(prev => prev + 1);
-                  }}
-                  disabled={
-                    (currentStep === 1 && !selectedService) ||
-                    (currentStep === 2 && !selectedDoctor) ||
-                    (currentStep === 3 && (!selectedDate || !selectedTime)) ||
-                    (currentStep === 4 && (!patientData.firstName || !patientData.lastName || !patientData.email || !patientData.phone))
-                  }
-                >
-                  Continue <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              ) : (
-                <Button
-                  className="bg-emerald-600 hover:bg-emerald-700 rounded-lg px-8 h-11 text-white text-sm font-bold shadow-md cursor-pointer"
-                  onClick={handleBookingSubmit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                      Processing...
-                    </span>
-                  ) : (
-                    <span className="flex items-center">
-                      Confirm Booking <Check className="w-4 h-4 ml-2" />
-                    </span>
-                  )}
-                </Button>
+            <div className="mt-8 pt-6 border-t border-slate-100">
+              {errorMsg && (
+                <div className="mb-4 p-4 bg-red-50/80 border border-red-200 rounded-lg text-sm text-red-600 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
               )}
+              <div className="flex justify-between items-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))}
+                  disabled={currentStep === 1 || isSubmitting}
+                  className="text-slate-500 hover:text-slate-900 h-11 px-4 rounded-lg font-medium cursor-pointer"
+                >
+                  {currentStep > 1 && <ArrowLeft className="w-4 h-4 mr-2" />} Back
+                </Button>
+
+                {currentStep < steps.length ? (
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700 rounded-lg px-8 h-11 text-sm font-bold shadow-sm cursor-pointer"
+                    onClick={() => {
+                      if (currentStep === 1 && !selectedService) return;
+                      if (currentStep === 2 && !selectedDoctor) return;
+                      if (currentStep === 3 && (!selectedDate || !selectedTime)) return;
+                      if (currentStep === 4 && (!patientData.firstName || !patientData.lastName || !patientData.email || !patientData.phone)) return;
+                      setCurrentStep(prev => prev + 1);
+                    }}
+                    disabled={
+                      (currentStep === 1 && !selectedService) ||
+                      (currentStep === 2 && !selectedDoctor) ||
+                      (currentStep === 3 && (!selectedDate || !selectedTime)) ||
+                      (currentStep === 4 && (!patientData.firstName || !patientData.lastName || !patientData.email || !patientData.phone))
+                    }
+                  >
+                    Continue <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                ) : (
+                  <Button
+                    className="bg-emerald-600 hover:bg-emerald-700 rounded-lg px-8 h-11 text-white text-sm font-bold shadow-md cursor-pointer"
+                    onClick={handleBookingSubmit}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                        Processing...
+                      </span>
+                    ) : (
+                      <span className="flex items-center">
+                        Confirm Booking <Check className="w-4 h-4 ml-2" />
+                      </span>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>

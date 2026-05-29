@@ -142,7 +142,26 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="border-t border-slate-800 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Heshvitha Multi Speciality Dental Hospital. All rights reserved.</p>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+            <p>© {new Date().getFullYear()} Heshvitha Multi Speciality Dental Hospital. All rights reserved.</p>
+            <div className="hidden sm:block h-3 w-px bg-slate-800" />
+            <div className="flex items-center gap-1.5">
+              <span>Designed and Developed by</span>
+              <a 
+                href="https://tekloria.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-flex items-center gap-1.5 hover:text-slate-300 transition-colors duration-200"
+              >
+                <img 
+                  src="/tekloria-logo.png" 
+                  alt="Tekloria" 
+                  className="h-4 w-auto object-contain brightness-90 hover:brightness-100 transition-all duration-200" 
+                />
+                <span className="font-medium text-slate-400 hover:text-white transition-colors duration-200">Tekloria</span>
+              </a>
+            </div>
+          </div>
           <div className="flex gap-6">
             <Link href="/privacy" className="hover:text-slate-300 transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-slate-300 transition-colors">Terms of Service</Link>

@@ -63,7 +63,7 @@ export function WhyChooseUs() {
             </div>
             
             {/* Glassmorphic Badge 1: Top Right */}
-            <div className="absolute -top-3 -right-3 bg-white/90 backdrop-blur-md py-2 px-3.5 rounded-md shadow-md border border-slate-100/80 flex items-center gap-2 z-10">
+            <div className="absolute -top-3 right-0 sm:-right-3 bg-white/90 backdrop-blur-md py-2 px-3.5 rounded-md shadow-md border border-slate-100/80 flex items-center gap-2 z-10">
               <div className="text-amber-500 bg-amber-50 p-1.5 rounded-md border border-amber-100">
                 <Sparkles className="h-3.5 w-3.5" />
               </div>
@@ -74,7 +74,7 @@ export function WhyChooseUs() {
             </div>
 
             {/* Glassmorphic Badge 2: Bottom Right */}
-            <div className="absolute bottom-6 -right-3 bg-white/90 backdrop-blur-md py-2 px-3.5 rounded-md shadow-md border border-slate-100/80 flex items-center gap-2 z-10">
+            <div className="absolute bottom-6 right-0 sm:-right-3 bg-white/90 backdrop-blur-md py-2 px-3.5 rounded-md shadow-md border border-slate-100/80 flex items-center gap-2 z-10">
               <div className="text-blue-600 bg-blue-50 p-1.5 rounded-md border border-blue-100">
                 <Shield className="h-3.5 w-3.5" />
               </div>

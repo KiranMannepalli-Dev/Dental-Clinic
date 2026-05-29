@@ -204,12 +204,12 @@ export default function BlogPage() {
           </div>
 
           {/* Category Filters */}
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex overflow-x-auto gap-2 pb-3 mb-8 md:flex-wrap md:pb-0 scrollbar-none snap-x snap-mandatory [-webkit-overflow-scrolling:touch]">
             {blogCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer snap-start shrink-0 ${
                   activeCategory === cat
                     ? "bg-blue-600 text-white shadow-sm"
                     : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
