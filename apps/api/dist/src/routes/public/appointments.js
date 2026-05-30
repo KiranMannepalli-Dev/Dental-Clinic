@@ -15,7 +15,20 @@ router.get('/slots', async (req, res, next) => {
         const { doctorId, date } = SlotQuerySchema.parse(req.query);
         // Normalize date to YYYY-MM-DD
         const dateStr = date.split('T')[0];
-        const slots = await (0, slots_1.getAvailableSlots)(doctorId, dateStr);
+        // Resolve doctorId (can be CUID or slug)
+        let resolvedDoctorId = doctorId;
+        const doctor = await database_1.prisma.doctor.findFirst({
+            where: {
+                OR: [
+                    { id: doctorId },
+                    { slug: doctorId }
+                ]
+            }
+        });
+        if (doctor) {
+            resolvedDoctorId = doctor.id;
+        }
+        const slots = await (0, slots_1.getAvailableSlots)(resolvedDoctorId, dateStr);
         res.json({
             success: true,
             data: slots
@@ -42,6 +55,46 @@ const BookAppointmentSchema = zod_1.z.object({
 router.post('/', async (req, res, next) => {
     try {
         const data = BookAppointmentSchema.parse(req.body);
+        // Resolve doctorId (can be CUID or slug)
+        let doctorId = data.doctorId;
+        const doctor = await database_1.prisma.doctor.findFirst({
+            where: {
+                OR: [
+                    { id: doctorId },
+                    { slug: doctorId }
+                ]
+            }
+        });
+        if (!doctor) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'BAD_REQUEST',
+                    message: `Doctor not found for ID or slug: "${doctorId}"`
+                }
+            });
+        }
+        doctorId = doctor.id;
+        // Resolve serviceId (can be CUID or slug)
+        let serviceId = data.serviceId;
+        const service = await database_1.prisma.service.findFirst({
+            where: {
+                OR: [
+                    { id: serviceId },
+                    { slug: serviceId }
+                ]
+            }
+        });
+        if (!service) {
+            return res.status(400).json({
+                success: false,
+                error: {
+                    code: 'BAD_REQUEST',
+                    message: `Service not found for ID or slug: "${serviceId}"`
+                }
+            });
+        }
+        serviceId = service.id;
         // Generate booking reference
         const bookingRef = `BS-${new Date().getFullYear()}-${(0, uuid_1.v4)().substring(0, 6).toUpperCase()}`;
         // Find patient by email
@@ -74,8 +127,8 @@ router.post('/', async (req, res, next) => {
             data: {
                 bookingRef,
                 patientId: patient.id,
-                doctorId: data.doctorId,
-                serviceId: data.serviceId,
+                doctorId: doctorId,
+                serviceId: serviceId,
                 appointmentDate: appointmentDate,
                 startTime: data.startTime,
                 endTime: "TBD", // Simplification
