@@ -232,7 +232,7 @@ export default function BlogAdmin() {
         </div>
         <button 
           onClick={handleOpenCreateModal}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-md transition-colors shadow-sm cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-blue-500/10 cursor-pointer hover:-translate-y-0.5 active:scale-95"
         >
           <Plus className="w-4 h-4" /> Create Article
         </button>
@@ -240,49 +240,49 @@ export default function BlogAdmin() {
 
       {/* Alerts */}
       {feedbackMsg && (
-        <div className={`p-4 rounded-md border text-sm flex items-center justify-between ${
-          feedbackMsg.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'
+        <div className={`p-4 rounded-xl border text-sm flex items-center justify-between ${
+          feedbackMsg.type === 'success' ? 'bg-green-50/80 backdrop-blur-sm text-green-800 border-green-200' : 'bg-red-50/80 backdrop-blur-sm text-red-800 border-red-200'
         }`}>
-          <span>{feedbackMsg.text}</span>
-          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer">Dismiss</button>
+          <span className="font-medium">{feedbackMsg.text}</span>
+          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer hover:text-slate-900">Dismiss</button>
         </div>
       )}
 
       {/* Blogs Table */}
-      <div className="bg-white rounded-md shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden hover:shadow-md transition-all duration-300">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
-                <th className="p-4 font-medium">Article Info</th>
-                <th className="p-4 font-medium">Author</th>
-                <th className="p-4 font-medium">Category</th>
-                <th className="p-4 font-medium">Dates</th>
-                <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium text-right">Actions</th>
+              <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                <th className="p-4">Article Info</th>
+                <th className="p-4">Author</th>
+                <th className="p-4">Category</th>
+                <th className="p-4">Dates</th>
+                <th className="p-4">Status</th>
+                <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100/70">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">Loading articles...</td>
+                  <td colSpan={6} className="p-8 text-center text-slate-400 text-xs italic">Loading articles...</td>
                 </tr>
               ) : blogs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">No blog posts found. Click "Create Article" to write your first post.</td>
+                  <td colSpan={6} className="p-8 text-center text-slate-400 text-xs italic">No blog posts found. Click "Create Article" to write your first post.</td>
                 </tr>
               ) : (
                 blogs.map((blog) => (
-                  <tr key={blog.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={blog.id} className="hover:bg-slate-50/40 transition-colors duration-150">
                     {/* Title & Excerpt */}
                     <td className="p-4 max-w-xs md:max-w-md">
-                      <p className="font-semibold text-slate-900 text-sm line-clamp-1">{blog.title}</p>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{blog.excerpt}</p>
+                      <p className="font-bold text-slate-900 text-sm line-clamp-1">{blog.title}</p>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2 font-medium">{blog.excerpt}</p>
                     </td>
 
                     {/* Author */}
                     <td className="p-4">
-                      <div className="flex items-center gap-1 text-sm text-slate-800 font-medium">
+                      <div className="flex items-center gap-1.5 text-sm text-slate-800 font-bold">
                         <User className="w-3.5 h-3.5 text-slate-400" />
                         <span>Dr. {blog.author?.firstName} {blog.author?.lastName}</span>
                       </div>
@@ -290,42 +290,42 @@ export default function BlogAdmin() {
 
                     {/* Category */}
                     <td className="p-4 text-sm text-slate-700">
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-100 border border-slate-200/50 text-[10px] font-bold uppercase text-slate-600">
                         <Tag className="w-3 h-3 text-slate-400" />
                         {blog.category}
                       </span>
                     </td>
 
                     {/* Dates */}
-                    <td className="p-4 text-xs text-slate-500">
-                      <div className="flex flex-col gap-1">
+                    <td className="p-4 text-xs text-slate-555">
+                      <div className="flex flex-col gap-1 font-medium">
                         <span>Created: {new Date(blog.createdAt).toLocaleDateString()}</span>
                         {blog.publishedAt && (
-                          <span className="text-green-700 font-medium">Published: {new Date(blog.publishedAt).toLocaleDateString()}</span>
+                          <span className="text-green-700 font-bold">Published: {new Date(blog.publishedAt).toLocaleDateString()}</span>
                         )}
                       </div>
                     </td>
 
                     {/* Status badge */}
                     <td className="p-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold border ${getStatusBadgeClass(blog.status)}`}>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold border ${getStatusBadgeClass(blog.status)}`}>
                         {blog.status}
                       </span>
                     </td>
 
                     {/* Actions */}
                     <td className="p-4 text-right">
-                      <div className="inline-flex items-center gap-2">
+                      <div className="inline-flex items-center gap-1 bg-slate-50/80 p-1.5 rounded-lg border border-slate-100/50">
                         <button 
                           onClick={() => handleOpenEditModal(blog)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
                           title="Edit Article"
                         >
                           <Edit2 className="w-4 h-4"/>
                         </button>
                         <button 
                           onClick={() => handleDeleteBlog(blog.id, blog.title)}
-                          className="p-1.5 text-slate-500 hover:text-red-650 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-500 hover:text-red-650 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                           title="Delete Article"
                         >
                           <Trash2 className="w-4 h-4"/>

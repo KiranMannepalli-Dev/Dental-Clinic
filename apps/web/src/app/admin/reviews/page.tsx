@@ -159,28 +159,28 @@ export default function ReviewsAdmin() {
 
       {/* Alerts */}
       {feedbackMsg && (
-        <div className={`p-4 rounded-md border text-sm flex items-center justify-between ${
-          feedbackMsg.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'
+        <div className={`p-4 rounded-xl border text-sm flex items-center justify-between ${
+          feedbackMsg.type === 'success' ? 'bg-green-50/80 backdrop-blur-sm text-green-800 border-green-200' : 'bg-red-50/80 backdrop-blur-sm text-red-800 border-red-200'
         }`}>
-          <span>{feedbackMsg.text}</span>
-          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer">Dismiss</button>
+          <span className="font-medium">{feedbackMsg.text}</span>
+          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer hover:text-slate-900">Dismiss</button>
         </div>
       )}
 
       {/* Filters Board */}
-      <div className="bg-white p-4 rounded-md shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center justify-between">
+      <div className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-slate-200/60 flex flex-wrap gap-4 items-center justify-between">
         <div className="flex flex-wrap gap-4 items-center">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-slate-400" />
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Filters:</span>
+            <span className="text-[10px] font-bold text-slate-405 uppercase tracking-wider">Filters:</span>
           </div>
 
           {/* Rating filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-slate-550">Rating</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-550">Rating</span>
             <select 
               value={ratingFilter} onChange={e => setRatingFilter(e.target.value)}
-              className="py-1 px-2 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none bg-white"
+              className="py-1.5 px-2.5 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none bg-white cursor-pointer"
             >
               <option value="all">All Stars</option>
               <option value="5">5 Stars</option>
@@ -192,11 +192,11 @@ export default function ReviewsAdmin() {
           </div>
 
           {/* Status filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium text-slate-550">Status</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-550">Status</span>
             <select 
               value={publishFilter} onChange={e => setPublishFilter(e.target.value)}
-              className="py-1 px-2 border border-slate-200 rounded text-xs text-slate-700 focus:outline-none bg-white"
+              className="py-1.5 px-2.5 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none bg-white cursor-pointer"
             >
               <option value="all">All Statuses</option>
               <option value="published">Published</option>
@@ -206,22 +206,22 @@ export default function ReviewsAdmin() {
           </div>
         </div>
 
-        <div className="text-xs text-slate-450 font-medium">
+        <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">
           Showing {filteredReviews.length} testimonials
         </div>
       </div>
 
       {/* Main Reviews List */}
       {isLoading ? (
-        <div className="text-center py-12 text-slate-500 text-sm">Loading reviews...</div>
+        <div className="text-center py-12 text-slate-400 text-xs italic">Loading reviews...</div>
       ) : filteredReviews.length === 0 ? (
-        <div className="text-center py-12 text-slate-500 text-sm bg-white rounded border border-slate-200">
+        <div className="text-center py-12 text-slate-400 text-xs italic bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60">
           No matching reviews found.
         </div>
       ) : (
         <div className="space-y-4">
           {filteredReviews.map((rev) => (
-            <div key={rev.id} className="bg-white p-6 rounded-md shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-start justify-between gap-6 transition-all hover:shadow-md">
+            <div key={rev.id} className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col md:flex-row md:items-start justify-between gap-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
               
               {/* Review Details Area */}
               <div className="space-y-3 flex-grow max-w-3xl">
@@ -231,13 +231,13 @@ export default function ReviewsAdmin() {
 
                   {/* Verification check */}
                   {rev.isVerified && (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold border border-green-200 rounded uppercase">
-                      <ShieldCheck className="w-3.5 h-3.5"/> Verified Visit
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold border border-green-200 rounded-lg uppercase tracking-wider">
+                      <ShieldCheck className="w-3.5 h-3.5 text-green-600"/> Verified Visit
                     </span>
                   )}
 
                   <span className="text-slate-300 text-xs">•</span>
-                  <span className="text-xs text-slate-450">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                  <span className="text-xs text-slate-450 font-semibold">{new Date(rev.createdAt).toLocaleDateString()}</span>
                   <span className="text-slate-300 text-xs">•</span>
                   <span className="text-xs text-slate-450 uppercase font-bold tracking-wider font-mono">Source: {rev.source}</span>
                 </div>
@@ -245,40 +245,40 @@ export default function ReviewsAdmin() {
                 {/* Content */}
                 <div>
                   {rev.title && <h4 className="font-bold text-slate-900 text-sm mb-1">{rev.title}</h4>}
-                  <p className="text-slate-650 text-sm leading-relaxed whitespace-pre-line">"{rev.content}"</p>
+                  <p className="text-slate-650 text-sm leading-relaxed whitespace-pre-line font-medium">"{rev.content}"</p>
                 </div>
 
                 {/* Patient and doctor identifiers */}
-                <div className="flex flex-wrap gap-4 pt-1 text-xs text-slate-500 border-t border-slate-100">
+                <div className="flex flex-wrap gap-4 pt-2 text-xs text-slate-505 border-t border-slate-150/60 font-semibold">
                   <span className="flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-slate-400" />
-                    Patient: <strong>{rev.patient?.firstName} {rev.patient?.lastName}</strong> ({rev.patient?.email})
+                    Patient: <strong className="text-slate-800">{rev.patient?.firstName} {rev.patient?.lastName}</strong> ({rev.patient?.email})
                   </span>
                   {rev.doctor && (
                     <span className="flex items-center gap-1.5">
                       <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
-                      Assigned Doctor: <strong>Dr. {rev.doctor?.firstName} {rev.doctor?.lastName}</strong>
+                      Assigned Doctor: <strong className="text-slate-800">Dr. {rev.doctor?.firstName} {rev.doctor?.lastName}</strong>
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Status Actions Panel */}
-              <div className="shrink-0 flex md:flex-col gap-2.5 items-end self-end md:self-start">
+              <div className="shrink-0 flex md:flex-col gap-2 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100/50 items-end self-end md:self-start">
                 
                 {/* Publish Toggle Button */}
                 <button
                   onClick={() => handleUpdateReview(rev.id, { isPublished: !rev.isPublished }, `Review ${!rev.isPublished ? 'published' : 'hidden'}!`)}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold uppercase rounded border transition-colors cursor-pointer ${
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 w-full justify-center text-xs font-bold uppercase rounded-lg border transition-all cursor-pointer ${
                     rev.isPublished 
-                      ? 'bg-slate-105 hover:bg-slate-200 text-slate-700 border-slate-300' 
-                      : 'bg-green-600 hover:bg-green-700 text-white border-green-600'
+                      ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300 shadow-sm' 
+                      : 'bg-green-600 hover:bg-green-700 text-white border-green-600 shadow-sm shadow-green-500/10'
                   }`}
                 >
                   {rev.isPublished ? (
-                    <><X className="w-3.5 h-3.5" /> Hide</>
+                    <><X className="w-3.5 h-3.5 text-slate-500" /> Hide</>
                   ) : (
-                    <><Check className="w-3.5 h-3.5" /> Approve</>
+                    <><Check className="w-3.5 h-3.5 text-white" /> Approve</>
                   )}
                 </button>
 

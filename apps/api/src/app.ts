@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -12,7 +13,23 @@ const app = express();
 app.use(requestId);
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: (origin, callback) => {
+    if (!origin || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+      return;
+    }
+    const allowed = [
+      process.env.FRONTEND_URL?.replace(/\/$/, ''),
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:5173'
+    ].filter(Boolean);
+    if (allowed.includes(origin.replace(/\/$/, ''))) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10kb' }));
@@ -38,6 +55,9 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Serve static uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // API Routes
 import routes from './routes';

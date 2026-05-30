@@ -33,7 +33,11 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
 
     const decoded = jwt.verify(token, JWT_SECRET) as AdminPayload;
     
-    if (decoded.role !== 'SUPER_ADMIN' && decoded.role !== 'RECEPTIONIST') {
+    if (
+      decoded.role !== 'SUPER_ADMIN' && 
+      decoded.role !== 'RECEPTIONIST' && 
+      decoded.role !== 'DOCTOR'
+    ) {
        return res.status(403).json({
         success: false,
         error: { code: 'FORBIDDEN', message: 'Insufficient permissions' }
@@ -48,4 +52,16 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
       error: { code: 'UNAUTHORIZED', message: 'Invalid or expired token' }
     });
   }
+};
+
+export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
+  requireAdmin(req, res, () => {
+    if (req.admin?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Only Owners (SUPER_ADMIN) have access' }
+      });
+    }
+    next();
+  });
 };

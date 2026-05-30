@@ -161,8 +161,11 @@ model Patient {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  appointments  Appointment[]
-  reviews       Review[]
+  appointments      Appointment[]
+  reviews           Review[]
+  medicalTests      MedicalTest[]
+  billingInvoices   BillingInvoice[]
+  patientReports    PatientReport[]
 
   @@index([email])
   @@index([phone])
@@ -185,6 +188,8 @@ model Appointment {
   cancelReason      String?
   reminderSentAt    DateTime?
   confirmedAt       DateTime?
+  paymentStatus     String?           // "PENDING", "PAID"
+  paymentMethod     String?           // "CASH", "CARD", "UPI", "INSURANCE"
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -328,8 +333,60 @@ model SiteSettings {
   mapLat          Float
   mapLng          Float
   socialLinks     Json   // { whatsapp, instagram, facebook, youtube }
+  workingHours    Json?  // Array of day schedules
   seoTitle        String?
   seoDescription  String?
   analyticsId     String?
   updatedAt       DateTime @updatedAt
+}
+
+model MedicalTest {
+  id          String   @id @default(cuid())
+  patientId   String
+  testName    String   // e.g. Orthopantomogram (OPG), CBCT, Hemoglobin
+  category    String   // X-Ray, Blood Test, Scan, etc.
+  cost        Decimal  @db.Decimal(10, 2)
+  result      String?  // e.g. Impacted molar, normal
+  status      String   @default("PENDING") // PENDING, COMPLETED
+  testDate    DateTime @default(now())
+  notes       String?  // Doctor observations
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+}
+
+model BillingInvoice {
+  id            String   @id @default(cuid())
+  patientId     String
+  invoiceNumber String   @unique // e.g. INV-2026-0001
+  items         Json     // Array of { description: string, amount: number }
+  discount      Decimal  @default(0) @db.Decimal(10, 2)
+  tax           Decimal  @default(0) @db.Decimal(10, 2)
+  total         Decimal  @db.Decimal(10, 2)
+  paymentStatus String   @default("UNPAID") // UNPAID, PAID, PARTIALLY_PAID
+  paymentMethod String?  // CASH, CARD, UPI, INSURANCE
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([invoiceNumber])
+}
+
+model PatientReport {
+  id          String   @id @default(cuid())
+  patientId   String
+  title       String   // e.g. Lateral Cephalogram Report, Dental Prescription
+  fileUrl     String
+  reportType  String   // X_RAY, LAB_REPORT, PRESCRIPTION, DISCHARGE_SUMMARY
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Settings, Save, Globe, Share2, Calendar, MapPin, 
-  Trash2, Plus, Info, Check, X, ShieldAlert
+  Trash2, Plus, Info, Check, X, ShieldAlert, Clock
 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
@@ -18,7 +18,7 @@ interface Holiday {
 
 export default function SettingsAdmin() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'general' | 'social' | 'seo' | 'holidays'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'social' | 'seo' | 'holidays' | 'hours'>('general');
   const [isLoading, setIsLoading] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -43,6 +43,17 @@ export default function SettingsAdmin() {
   // SEO Form Fields
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
+
+  // Working Hours state
+  const [workingHours, setWorkingHours] = useState<any[]>([
+    { dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+    { dayOfWeek: 'TUESDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+    { dayOfWeek: 'WEDNESDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+    { dayOfWeek: 'THURSDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+    { dayOfWeek: 'FRIDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+    { dayOfWeek: 'SATURDAY', startTime: '09:00', endTime: '13:00', slotMinutes: 30, isAvailable: true },
+    { dayOfWeek: 'SUNDAY', startTime: '09:00', endTime: '13:00', slotMinutes: 30, isAvailable: false },
+  ]);
 
   // Holidays state
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -95,6 +106,11 @@ export default function SettingsAdmin() {
         // SEO
         setSeoTitle(s.seoTitle || "");
         setSeoDescription(s.seoDescription || "");
+
+        // Working Hours
+        if (s.workingHours && s.workingHours.length > 0) {
+          setWorkingHours(s.workingHours);
+        }
       }
 
       // Fetch holidays list
@@ -115,7 +131,7 @@ export default function SettingsAdmin() {
     fetchSettings();
   }, [router]);
 
-  // Submit Site Settings Form (General, Social, SEO)
+  // Submit Site Settings Form (General, Social, SEO, hours)
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedbackMsg(null);
@@ -138,6 +154,7 @@ export default function SettingsAdmin() {
           facebook: facebook || null,
           youtube: youtube || null
         },
+        workingHours,
         seoTitle: seoTitle || null,
         seoDescription: seoDescription || null,
         analyticsId: analyticsId || null
@@ -235,55 +252,63 @@ export default function SettingsAdmin() {
     <div className="space-y-6">
       {/* Top Banner alert */}
       {feedbackMsg && (
-        <div className={`p-4 rounded-md border text-sm flex items-center justify-between ${
-          feedbackMsg.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'
+        <div className={`p-4 rounded-xl border text-sm flex items-center justify-between ${
+          feedbackMsg.type === 'success' ? 'bg-green-50/80 backdrop-blur-sm text-green-800 border-green-200' : 'bg-red-50/80 backdrop-blur-sm text-red-800 border-red-200'
         }`}>
-          <span>{feedbackMsg.text}</span>
-          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer">Dismiss</button>
+          <span className="font-medium">{feedbackMsg.text}</span>
+          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer hover:text-slate-900">Dismiss</button>
         </div>
       )}
 
       {/* Tabs navigation list */}
-      <div className="flex border-b border-slate-200 pb-1">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-1">
         <button 
           onClick={() => setActiveTab('general')}
-          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
-            activeTab === 'general' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-700'
+          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'general' ? 'border-blue-650 text-blue-650 scale-102 font-bold' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
           <MapPin className="w-3.5 h-3.5" /> General Profile
         </button>
         <button 
           onClick={() => setActiveTab('social')}
-          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
-            activeTab === 'social' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-700'
+          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'social' ? 'border-blue-650 text-blue-650 scale-102 font-bold' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
           <Share2 className="w-3.5 h-3.5" /> Social Accounts
         </button>
         <button 
           onClick={() => setActiveTab('seo')}
-          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
-            activeTab === 'seo' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-700'
+          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'seo' ? 'border-blue-650 text-blue-650 scale-102 font-bold' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
           <Globe className="w-3.5 h-3.5" /> Search & SEO
         </button>
         <button 
           onClick={() => setActiveTab('holidays')}
-          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
-            activeTab === 'holidays' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-700'
+          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'holidays' ? 'border-blue-650 text-blue-650 scale-102 font-bold' : 'border-transparent text-slate-400 hover:text-slate-700'
           }`}
         >
           <Calendar className="w-3.5 h-3.5" /> Holiday Calendar
         </button>
+        <button 
+          onClick={() => setActiveTab('hours')}
+          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'hours' ? 'border-blue-650 text-blue-650 scale-102 font-bold' : 'border-transparent text-slate-400 hover:text-slate-700'
+          }`}
+        >
+          <Clock className="w-3.5 h-3.5" /> Working Hours
+        </button>
       </div>
 
       {/* TABS CONTAINER */}
-      <div className="bg-white rounded-md border border-slate-200 p-6 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 p-6 shadow-sm">
         
-        {/* TABS 1, 2, 3: Site Settings Form */}
-        {(activeTab === 'general' || activeTab === 'social' || activeTab === 'seo') && (
+        {/* TABS 1, 2, 3, 5: Site Settings Form */}
+        {(activeTab === 'general' || activeTab === 'social' || activeTab === 'seo' || activeTab === 'hours') && (
           <form onSubmit={handleSaveSettings} className="space-y-6">
             
             {/* General Tab */}
@@ -445,11 +470,114 @@ export default function SettingsAdmin() {
               </div>
             )}
 
+            {/* Working Hours Tab */}
+            {activeTab === 'hours' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm pb-2 border-b border-slate-100 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-blue-600" /> Clinic Default Working Hours
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                    Set the baseline default schedule for the clinic. These hours establish the fallback schedule when dynamically checking slot availability.
+                  </p>
+                </div>
+
+                <div className="border border-slate-200/80 rounded-2xl overflow-hidden bg-white/50 backdrop-blur-sm shadow-sm">
+                  <table className="w-full border-collapse text-left text-sm text-slate-600">
+                    <thead>
+                      <tr className="bg-slate-55/40 border-b border-slate-100 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                        <th className="p-4 w-40">Day of Week</th>
+                        <th className="p-4 w-32">Status</th>
+                        <th className="p-4">Start Time</th>
+                        <th className="p-4">End Time</th>
+                        <th className="p-4 w-40">Slot Duration</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100/60 font-medium">
+                      {workingHours.map((day, idx) => (
+                        <tr key={day.dayOfWeek} className="hover:bg-slate-50/20 transition-colors">
+                          {/* Day */}
+                          <td className="p-4 font-bold text-slate-800 text-xs">
+                            {day.dayOfWeek}
+                          </td>
+                          {/* Status / Toggle */}
+                          <td className="p-4">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={day.isAvailable}
+                                onChange={(e) => {
+                                  const updated = [...workingHours];
+                                  updated[idx].isAvailable = e.target.checked;
+                                  setWorkingHours(updated);
+                                }}
+                                className="sr-only peer"
+                              />
+                              <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                              <span className="ml-2 text-xs font-bold uppercase tracking-wider text-slate-500 peer-checked:text-blue-700">
+                                {day.isAvailable ? "Open" : "Closed"}
+                              </span>
+                            </label>
+                          </td>
+                          {/* Start Time */}
+                          <td className="p-4">
+                            <input
+                              type="time"
+                              value={day.startTime}
+                              disabled={!day.isAvailable}
+                              onChange={(e) => {
+                                const updated = [...workingHours];
+                                updated[idx].startTime = e.target.value;
+                                setWorkingHours(updated);
+                              }}
+                              className="py-1.5 px-3 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/30 bg-white disabled:opacity-50 disabled:bg-slate-50 text-slate-800 cursor-pointer"
+                            />
+                          </td>
+                          {/* End Time */}
+                          <td className="p-4">
+                            <input
+                              type="time"
+                              value={day.endTime}
+                              disabled={!day.isAvailable}
+                              onChange={(e) => {
+                                const updated = [...workingHours];
+                                updated[idx].endTime = e.target.value;
+                                setWorkingHours(updated);
+                              }}
+                              className="py-1.5 px-3 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/30 bg-white disabled:opacity-50 disabled:bg-slate-50 text-slate-800 cursor-pointer"
+                            />
+                          </td>
+                          {/* Slot Duration */}
+                          <td className="p-4">
+                            <select
+                              value={day.slotMinutes}
+                              disabled={!day.isAvailable}
+                              onChange={(e) => {
+                                const updated = [...workingHours];
+                                updated[idx].slotMinutes = parseInt(e.target.value);
+                                setWorkingHours(updated);
+                              }}
+                              className="py-1.5 px-3 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/30 bg-white disabled:opacity-50 disabled:bg-slate-50 text-slate-800 cursor-pointer"
+                            >
+                              <option value="15">15 mins</option>
+                              <option value="30">30 mins</option>
+                              <option value="45">45 mins</option>
+                              <option value="60">60 mins</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Submit changes bar */}
-            <div className="pt-4 border-t border-slate-100 flex justify-end">
+            <div className="pt-4 border-t border-slate-150/60 flex justify-end">
               <button 
                 type="submit"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded shadow-sm transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/10 transition-all cursor-pointer hover:-translate-y-0.5 active:scale-95"
               >
                 <Save className="w-4 h-4" /> Save Configuration
               </button>
@@ -470,28 +598,28 @@ export default function SettingsAdmin() {
                 <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
                   <Calendar className="w-4 h-4 text-blue-600" /> Add Closure Date
                 </h4>
-                <form onSubmit={handleAddHoliday} className="space-y-4 p-4 rounded border border-slate-200 bg-slate-50/50">
+                <form onSubmit={handleAddHoliday} className="space-y-4 p-5 rounded-2xl border border-slate-200/60 bg-slate-50/65 shadow-inner">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600">Closure Date <span className="text-red-555 font-bold">*</span></label>
+                    <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider">Closure Date <span className="text-red-555 font-bold">*</span></label>
                     <input 
                       type="date" required value={holidayDate} onChange={e => setHolidayDate(e.target.value)}
-                      className="py-1.5 px-3 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-500" 
+                      className="py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-white" 
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600">Label / Name <span className="text-red-555 font-bold">*</span></label>
+                    <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider">Label / Name <span className="text-red-555 font-bold">*</span></label>
                     <input 
                       type="text" required placeholder="e.g. Independence Day" value={holidayName} onChange={e => setHolidayName(e.target.value)}
-                      className="py-1.5 px-3 border border-slate-200 rounded text-sm focus:outline-none focus:border-blue-500" 
+                      className="py-2 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 bg-white" 
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-600">Closure Type</label>
+                    <label className="text-[10px] font-bold text-slate-405 uppercase tracking-wider">Closure Type</label>
                     <select 
                       value={holidayType} onChange={e => setHolidayType(e.target.value)}
-                      className="py-1.5 px-3 border border-slate-200 rounded text-sm text-slate-700 focus:outline-none focus:border-blue-500 bg-white"
+                      className="py-2 px-3 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-blue-500 bg-white cursor-pointer"
                     >
                       <option value="holiday">Official Holiday</option>
                       <option value="maintenance">Clinic Maintenance</option>
@@ -501,7 +629,7 @@ export default function SettingsAdmin() {
 
                   <button 
                     type="submit" disabled={holidayLoading}
-                    className="w-full inline-flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded shadow-sm cursor-pointer disabled:opacity-50"
+                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-50 transition-all hover:-translate-y-0.5 active:scale-95"
                   >
                     <Plus className="w-4 h-4" /> {holidayLoading ? 'Registering...' : 'Register Closure'}
                   </button>
@@ -510,11 +638,11 @@ export default function SettingsAdmin() {
 
               {/* Right Column: holidays listing */}
               <div className="md:col-span-2 space-y-4">
-                <h4 className="font-bold text-slate-800 text-sm">Active closures calendar</h4>
-                <p className="text-xs text-slate-500">During registered closures, users cannot select appointment slots on the website booking pages.</p>
+                <h4 className="font-bold text-slate-800 text-sm">Active Closures Calendar</h4>
+                <p className="text-xs text-slate-500 font-medium">During registered closures, users cannot select appointment slots on the website booking pages.</p>
                 
-                <div className="border border-slate-200 rounded-md overflow-hidden bg-white">
-                  <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
+                <div className="border border-slate-200/60 rounded-2xl overflow-hidden bg-white/50 backdrop-blur-sm">
+                  <div className="max-h-96 overflow-y-auto divide-y divide-slate-100/70">
                     {holidays.length === 0 ? (
                       <div className="p-8 text-center text-slate-400 text-xs italic">
                         No closures registered. Clinic is running on normal schedules.
@@ -524,27 +652,27 @@ export default function SettingsAdmin() {
                         <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors gap-4">
                           <div>
                             <p className="font-bold text-slate-900 text-sm">{item.name}</p>
-                            <p className="text-xs text-slate-500 mt-1 font-mono">
+                            <p className="text-xs text-slate-500 mt-1 font-mono font-medium">
                               {new Date(item.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-4">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                          <div className="flex items-center gap-3">
+                            <span className={`px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase border tracking-wider ${
                               item.type === 'maintenance' 
-                                ? 'bg-amber-50 border-amber-200 text-amber-700' 
+                                ? 'bg-amber-50 border-amber-250 text-amber-700' 
                                 : item.type === 'emergency'
-                                ? 'bg-red-50 border-red-200 text-red-700'
-                                : 'bg-slate-105 border-slate-350 text-slate-700'
+                                ? 'bg-red-50 border-red-250 text-red-700'
+                                : 'bg-slate-100 border-slate-300 text-slate-700'
                             }`}>
                               {item.type}
                             </span>
                             <button 
                               onClick={() => handleDeleteHoliday(item.id, item.name)}
-                              className="p-1.5 text-slate-400 hover:text-red-650 hover:bg-red-50 rounded cursor-pointer transition-colors"
+                              className="p-1.5 text-slate-450 hover:text-red-650 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
                               title="Delete holiday"
                             >
-                              <Trash2 className="w-4.5 h-4.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>

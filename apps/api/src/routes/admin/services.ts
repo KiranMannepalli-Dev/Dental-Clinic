@@ -23,6 +23,7 @@ const CreateServiceSchema = z.object({
   symptoms: z.array(z.string()).optional(),
   benefits: z.array(z.string()).optional(),
   recoveryTime: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
 });
 
 const UpdateServiceSchema = CreateServiceSchema.partial();

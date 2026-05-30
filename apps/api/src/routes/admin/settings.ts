@@ -24,6 +24,13 @@ const UpdateSettingsSchema = z.object({
     facebook: z.string().optional().nullable(),
     youtube: z.string().optional().nullable(),
   }),
+  workingHours: z.array(z.object({
+    dayOfWeek: z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']),
+    startTime: z.string(),
+    endTime: z.string(),
+    slotMinutes: z.number().int().positive(),
+    isAvailable: z.boolean()
+  })).optional().nullable(),
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
   analyticsId: z.string().optional().nullable(),
@@ -60,6 +67,15 @@ async function getOrCreateSettings() {
           facebook: 'https://facebook.com',
           youtube: 'https://youtube.com'
         },
+        workingHours: [
+          { dayOfWeek: 'MONDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+          { dayOfWeek: 'TUESDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+          { dayOfWeek: 'WEDNESDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+          { dayOfWeek: 'THURSDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+          { dayOfWeek: 'FRIDAY', startTime: '09:00', endTime: '17:00', slotMinutes: 30, isAvailable: true },
+          { dayOfWeek: 'SATURDAY', startTime: '09:00', endTime: '13:00', slotMinutes: 30, isAvailable: true },
+          { dayOfWeek: 'SUNDAY', startTime: '09:00', endTime: '13:00', slotMinutes: 30, isAvailable: false }
+        ],
         seoTitle: 'Heshvitha Multi Speciality Dental Clinic',
         seoDescription: 'Leading dental care and treatments in Hyderabad.',
         analyticsId: 'G-XXXXXXXXXX'
@@ -91,7 +107,8 @@ router.put('/', async (req, res, next) => {
       where: { id: 'singleton' },
       data: {
         ...body,
-        socialLinks: body.socialLinks
+        socialLinks: body.socialLinks,
+        workingHours: body.workingHours as any
       }
     });
 

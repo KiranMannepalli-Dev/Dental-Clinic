@@ -24,6 +24,7 @@ interface Service {
   sortOrder: number;
   recoveryTime?: string;
   iconName?: string;
+  imageUrl?: string;
 }
 
 export default function ServicesAdmin() {
@@ -50,6 +51,8 @@ export default function ServicesAdmin() {
   const [sortOrder, setSortOrder] = useState(0);
   const [recoveryTime, setRecoveryTime] = useState("");
   const [iconName, setIconName] = useState("Activity");
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const fetchServices = async () => {
     setIsLoading(true);
@@ -96,6 +99,8 @@ export default function ServicesAdmin() {
     setSortOrder(0);
     setRecoveryTime("");
     setIconName("Activity");
+    setImageUrl("");
+    setUploadingImage(false);
     setSelectedServiceId(null);
   };
 
@@ -122,7 +127,7 @@ export default function ServicesAdmin() {
     setSortOrder(srv.sortOrder);
     setRecoveryTime(srv.recoveryTime || "");
     setIconName(srv.iconName || "Activity");
-
+    setImageUrl(srv.imageUrl || "");
     setIsModalOpen(true);
   };
 
@@ -145,7 +150,8 @@ export default function ServicesAdmin() {
         isFeatured,
         sortOrder,
         recoveryTime: recoveryTime || null,
-        iconName: iconName || "Activity"
+        iconName: iconName || "Activity",
+        imageUrl: imageUrl || null
       };
 
       const url = modalMode === 'create'
@@ -176,6 +182,45 @@ export default function ServicesAdmin() {
       }
     } catch (err) {
       setFeedbackMsg({ type: 'error', text: "Network connection error" });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFeedbackMsg({ type: 'error', text: "File is too large. Max size is 5MB." });
+      return;
+    }
+
+    setUploadingImage(true);
+    setFeedbackMsg(null);
+
+    try {
+      const token = localStorage.getItem("adminToken");
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const res = await fetch(`${API_URL}/admin/upload`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        setImageUrl(data.url);
+        setFeedbackMsg({ type: 'success', text: "Service image uploaded successfully!" });
+      } else {
+        setFeedbackMsg({ type: 'error', text: data.error?.message || "Upload failed." });
+      }
+    } catch (err) {
+      setFeedbackMsg({ type: 'error', text: "Network error during upload." });
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -269,7 +314,7 @@ export default function ServicesAdmin() {
         </div>
         <button 
           onClick={handleOpenCreateModal}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-md transition-colors shadow-sm cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-blue-500/10 cursor-pointer hover:-translate-y-0.5 active:scale-95"
         >
           <Plus className="w-4 h-4" /> Add Service
         </button>
@@ -277,69 +322,80 @@ export default function ServicesAdmin() {
 
       {/* Alert Messaging */}
       {feedbackMsg && (
-        <div className={`p-4 rounded-md border text-sm flex items-center justify-between ${
-          feedbackMsg.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'
+        <div className={`p-4 rounded-xl border text-sm flex items-center justify-between ${
+          feedbackMsg.type === 'success' ? 'bg-green-50/80 backdrop-blur-sm text-green-800 border-green-200' : 'bg-red-50/80 backdrop-blur-sm text-red-800 border-red-200'
         }`}>
-          <span>{feedbackMsg.text}</span>
-          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer">Dismiss</button>
+          <span className="font-medium">{feedbackMsg.text}</span>
+          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer hover:text-slate-900">Dismiss</button>
         </div>
       )}
 
       {/* Services Table */}
-      <div className="bg-white rounded-md shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden hover:shadow-md transition-all duration-300">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
-                <th className="p-4 font-medium w-16">Sort</th>
-                <th className="p-4 font-medium">Service Name</th>
-                <th className="p-4 font-medium">Category</th>
-                <th className="p-4 font-medium">Duration & Pricing</th>
-                <th className="p-4 font-medium">Status Toggles</th>
-                <th className="p-4 font-medium text-right">Actions</th>
+              <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                <th className="p-4 w-16">Sort</th>
+                <th className="p-4">Service Name</th>
+                <th className="p-4">Category</th>
+                <th className="p-4">Duration & Pricing</th>
+                <th className="p-4">Status Toggles</th>
+                <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100/70">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">Loading services...</td>
+                  <td colSpan={6} className="p-8 text-center text-slate-400 text-xs italic">Loading services...</td>
                 </tr>
               ) : services.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-500">No services configured in DB.</td>
+                  <td colSpan={6} className="p-8 text-center text-slate-400 text-xs italic">No services configured in DB.</td>
                 </tr>
               ) : (
                 services.map((srv) => (
-                  <tr key={srv.id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={srv.id} className="hover:bg-slate-50/40 transition-colors duration-150">
                     {/* Sort Order */}
-                    <td className="p-4 text-slate-500 font-mono text-sm">
+                    <td className="p-4 text-slate-500 font-mono text-sm font-semibold">
                       {srv.sortOrder}
                     </td>
 
-                    {/* Name & description */}
-                    <td className="p-4 max-w-xs md:max-w-sm">
-                      <p className="font-semibold text-slate-900 text-sm">{srv.name}</p>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{srv.shortDescription}</p>
+                    {/* Service Name */}
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm shrink-0 border border-slate-200 overflow-hidden shadow-inner">
+                          {srv.imageUrl ? (
+                            <img src={srv.imageUrl} alt="Service" className="w-full h-full object-cover" />
+                          ) : (
+                            <Settings className="w-5 h-5" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">{srv.name}</p>
+                          <p className="text-[10px] text-slate-400 font-medium mt-0.5 line-clamp-1">{srv.shortDescription}</p>
+                        </div>
+                      </div>
                     </td>
 
                     {/* Category */}
                     <td className="p-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${getCategoryBadgeClass(srv.category)}`}>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold border uppercase tracking-wider ${getCategoryBadgeClass(srv.category)}`}>
                         {srv.category}
                       </span>
                     </td>
 
                     {/* Duration & Pricing */}
                     <td className="p-4">
-                      <div className="flex items-center gap-1 text-sm text-slate-800 font-semibold">
+                      <div className="flex items-center gap-1 text-sm text-slate-850 font-bold">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
                         <span>{srv.duration} mins</span>
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">
+                      <div className="text-xs text-slate-500 mt-1 font-semibold">
                         {srv.priceMin ? (
                           <span>₹{parseFloat(srv.priceMin).toLocaleString()}{srv.priceMax && ` - ₹${parseFloat(srv.priceMax).toLocaleString()}`}</span>
                         ) : (
-                          <span className="italic">Request Quote</span>
+                          <span className="italic text-slate-400">Request Quote</span>
                         )}
                       </div>
                     </td>
@@ -353,9 +409,9 @@ export default function ServicesAdmin() {
                             type="checkbox" 
                             checked={srv.isActive} 
                             onChange={() => handleToggleActive(srv)}
-                            className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                            className="w-4 h-4 rounded border-slate-350 text-blue-600 focus:ring-blue-500/30 cursor-pointer"
                           />
-                          <span className={`text-xs font-semibold ${srv.isActive ? 'text-green-700' : 'text-slate-400'}`}>
+                          <span className={`text-xs font-bold ${srv.isActive ? 'text-green-700' : 'text-slate-400'}`}>
                             {srv.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </label>
@@ -365,9 +421,9 @@ export default function ServicesAdmin() {
                             type="checkbox" 
                             checked={srv.isFeatured} 
                             onChange={() => handleToggleFeatured(srv)}
-                            className="w-4 h-4 rounded text-yellow-500 border-slate-300 focus:ring-yellow-500 cursor-pointer"
+                            className="w-4 h-4 rounded border-slate-350 text-yellow-500 focus:ring-yellow-500/30 cursor-pointer"
                           />
-                          <span className={`text-xs font-semibold ${srv.isFeatured ? 'text-yellow-700' : 'text-slate-400'}`}>
+                          <span className={`text-xs font-bold ${srv.isFeatured ? 'text-yellow-700' : 'text-slate-400'}`}>
                             {srv.isFeatured ? '★ Featured' : 'Standard'}
                           </span>
                         </label>
@@ -376,17 +432,17 @@ export default function ServicesAdmin() {
 
                     {/* Actions */}
                     <td className="p-4 text-right">
-                      <div className="inline-flex items-center gap-2">
+                      <div className="inline-flex items-center gap-1 bg-slate-50/80 p-1.5 rounded-lg border border-slate-100/50">
                         <button 
                           onClick={() => handleOpenEditModal(srv)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
                           title="Edit Service"
                         >
                           <Edit2 className="w-4 h-4"/>
                         </button>
                         <button 
                           onClick={() => handleDeleteService(srv.id, srv.name)}
-                          className="p-1.5 text-slate-500 hover:text-red-650 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-500 hover:text-red-650 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                           title="Delete Service"
                         >
                           <Trash2 className="w-4 h-4"/>
@@ -420,6 +476,47 @@ export default function ServicesAdmin() {
 
             {/* Modal Body Form */}
             <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6 space-y-4">
+              
+              {/* Photo Upload Section */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 flex flex-col sm:flex-row items-center gap-4">
+                <div className="w-20 h-20 rounded-2xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-inner relative">
+                  {imageUrl ? (
+                    <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <Settings className="w-8 h-8 text-slate-350" />
+                  )}
+                </div>
+                
+                <div className="flex-grow space-y-2 text-center sm:text-left">
+                  <label className="text-xs font-bold text-slate-700 block">Service Photo / Banner</label>
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start items-center">
+                    <label className="px-3.5 py-1.5 bg-white border border-slate-250 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-lg cursor-pointer transition-all shadow-sm active:scale-97 flex items-center gap-1.5">
+                      <Plus className="w-3.5 h-3.5" />
+                      {uploadingImage ? "Uploading..." : "Upload Photo"}
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleImageUpload} 
+                        disabled={uploadingImage}
+                        className="hidden" 
+                      />
+                    </label>
+                    {imageUrl && (
+                      <button 
+                        type="button" 
+                        onClick={() => setImageUrl("")}
+                        className="px-3.5 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 text-xs font-bold rounded-lg cursor-pointer transition-all active:scale-97"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    Recommended: Square aspect ratio (1:1), size 400x400 pixels (max 5MB, JPEG/PNG/WebP).
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 sm:col-span-2">
                   <label className="text-xs font-semibold text-slate-600">Service Name <span className="text-red-555 font-bold">*</span></label>

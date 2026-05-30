@@ -8,10 +8,6 @@ export function FloatingButtons() {
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
-
   // Show scroll-to-top button when page is scrolled down
   useEffect(() => {
     const toggleVisibility = () => {
@@ -25,6 +21,10 @@ export function FloatingButtons() {
     window.addEventListener("scroll", toggleVisibility);
     return () => window.removeEventListener("scroll", toggleVisibility);
   }, []);
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const scrollToTop = () => {
     window.scrollTo({

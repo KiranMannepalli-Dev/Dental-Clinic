@@ -198,16 +198,16 @@ export default function ContactsAdmin() {
 
       {/* Alerts */}
       {feedbackMsg && (
-        <div className={`p-4 rounded-md border text-sm flex items-center justify-between ${
-          feedbackMsg.type === 'success' ? 'bg-green-50 text-green-800 border-green-200' : 'bg-red-50 text-red-800 border-red-200'
+        <div className={`p-4 rounded-xl border text-sm flex items-center justify-between ${
+          feedbackMsg.type === 'success' ? 'bg-green-50/80 backdrop-blur-sm text-green-800 border-green-200' : 'bg-red-50/80 backdrop-blur-sm text-red-800 border-red-200'
         }`}>
-          <span>{feedbackMsg.text}</span>
-          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer">Dismiss</button>
+          <span className="font-medium">{feedbackMsg.text}</span>
+          <button onClick={() => setFeedbackMsg(null)} className="text-xs font-bold underline cursor-pointer hover:text-slate-900">Dismiss</button>
         </div>
       )}
 
       {/* Leads Navigation Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 pb-1">
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-1">
         {[
           { key: 'all', label: 'Inbox (All)' },
           { key: 'unread', label: 'Unread Messages' },
@@ -221,17 +221,21 @@ export default function ContactsAdmin() {
             return true;
           }).length;
 
+          const isSelected = tabFilter === tab.key;
+
           return (
             <button
               key={tab.key}
               onClick={() => setTabFilter(tab.key as any)}
-              className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-colors flex items-center gap-1.5 cursor-pointer ${
-                tabFilter === tab.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-400 hover:text-slate-700'
+              className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+                isSelected 
+                  ? 'border-blue-650 text-blue-650 scale-102' 
+                  : 'border-transparent text-slate-400 hover:text-slate-700'
               }`}
             >
               {tab.label}
-              <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
-                tabFilter === tab.key ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-500'
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold transition-colors ${
+                isSelected ? 'bg-blue-50 text-blue-700 border border-blue-200/50' : 'bg-slate-100 text-slate-500'
               }`}>{count}</span>
             </button>
           );
@@ -239,47 +243,47 @@ export default function ContactsAdmin() {
       </div>
 
       {/* Table view */}
-      <div className="bg-white rounded-md shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden hover:shadow-md transition-all duration-300">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 text-xs uppercase tracking-wider">
-                <th className="p-4 font-medium">Contact Person</th>
-                <th className="p-4 font-medium">Subject</th>
-                <th className="p-4 font-medium">Resolution Status</th>
-                <th className="p-4 font-medium">Received Date</th>
-                <th className="p-4 font-medium text-right">Actions</th>
+              <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                <th className="p-4">Contact Person</th>
+                <th className="p-4">Subject</th>
+                <th className="p-4">Resolution Status</th>
+                <th className="p-4">Received Date</th>
+                <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100/70">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-500">Loading submissions...</td>
+                  <td colSpan={5} className="p-8 text-center text-slate-400 text-xs italic">Loading submissions...</td>
                 </tr>
               ) : filteredSubmissions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-500">No submissions found in this category.</td>
+                  <td colSpan={5} className="p-8 text-center text-slate-400 text-xs italic">No submissions found in this category.</td>
                 </tr>
               ) : (
                 filteredSubmissions.map((lead) => (
                   <tr 
                     key={lead.id} 
                     onClick={() => handleOpenDetails(lead)}
-                    className={`hover:bg-slate-50/70 transition-colors cursor-pointer ${
-                      !lead.isRead ? 'bg-blue-50/15 font-semibold text-slate-950' : 'text-slate-700'
+                    className={`hover:bg-slate-50/40 transition-colors cursor-pointer duration-150 ${
+                      !lead.isRead ? 'bg-blue-50/10 font-bold text-slate-950' : 'text-slate-700 font-medium'
                     }`}
                   >
                     {/* Name & Contact */}
                     <td className="p-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         {!lead.isRead && (
-                          <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" title="Unread Lead"></span>
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shrink-0 shadow shadow-blue-500/55 animate-pulse" title="Unread Lead"></span>
                         )}
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">{lead.name}</p>
-                          <div className="flex flex-col gap-0.5 text-xs text-slate-500 font-normal mt-0.5">
-                            <span className="flex items-center gap-1"><Mail className="w-3 h-3"/> {lead.email}</span>
-                            {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3"/> {lead.phone}</span>}
+                          <p className="text-sm font-bold text-slate-900">{lead.name}</p>
+                          <div className="flex flex-col gap-0.5 text-xs text-slate-500 font-medium mt-0.5">
+                            <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-slate-400"/> {lead.email}</span>
+                            {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-slate-400"/> {lead.phone}</span>}
                           </div>
                         </div>
                       </div>
@@ -287,49 +291,57 @@ export default function ContactsAdmin() {
 
                     {/* Subject & message snippet */}
                     <td className="p-4 max-w-xs md:max-w-md">
-                      <p className="text-sm font-medium text-slate-800 line-clamp-1">{lead.subject}</p>
-                      <p className="text-xs text-slate-500 font-normal line-clamp-2 mt-0.5">{lead.message}</p>
+                      <p className="text-sm font-bold text-slate-800 line-clamp-1">{lead.subject}</p>
+                      <p className="text-xs text-slate-550 font-normal line-clamp-2 mt-0.5">{lead.message}</p>
                     </td>
 
                     {/* Resolution Status */}
                     <td className="p-4">
                       <button
                         onClick={(e) => handleToggleResolved(lead, e)}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold border cursor-pointer ${
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border uppercase tracking-wider transition-all cursor-pointer ${
                           lead.isResolved 
-                            ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
-                            : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                            ? 'bg-green-50 text-green-700 border-green-200/60 hover:bg-green-100/80 shadow-sm shadow-green-500/5' 
+                            : 'bg-amber-50 text-amber-750 border-amber-250 hover:bg-amber-100/80 shadow-sm shadow-amber-500/5'
                         }`}
                       >
                         {lead.isResolved ? (
-                          <><CheckCircle className="w-3.5 h-3.5"/> Resolved</>
+                          <><CheckCircle className="w-3.5 h-3.5 text-green-600"/> Resolved</>
                         ) : (
-                          <><AlertCircle className="w-3.5 h-3.5"/> Action Required</>
+                          <><AlertCircle className="w-3.5 h-3.5 text-amber-600"/> Action Required</>
                         )}
                       </button>
                     </td>
 
                     {/* Received Date */}
-                    <td className="p-4 text-xs text-slate-450 font-normal">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
+                    <td className="p-4 text-xs text-slate-450 font-semibold">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
                         <span>{new Date(lead.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                     </td>
 
-                    {/* Delete */}
+                    {/* Actions */}
                     <td className="p-4 text-right">
-                      <div className="inline-flex gap-1">
-                        <button 
+                      <div className="inline-flex gap-1 bg-slate-50/80 p-1 rounded-lg border border-slate-100/50">
+                        <button
                           onClick={() => handleOpenDetails(lead)}
-                          className="p-1 text-slate-400 hover:text-blue-600 rounded cursor-pointer"
+                          className="p-1 text-slate-450 hover:text-blue-650 transition-colors rounded cursor-pointer"
                           title="Open submission details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button 
+                        <a
+                          href={`mailto:${lead.email}?subject=Re: ${encodeURIComponent(lead.subject)}&body=Dear ${encodeURIComponent(lead.name)},%0A%0AThank you for reaching out to Heshvitha Dental.%0A%0A`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-1 text-slate-450 hover:text-emerald-650 transition-colors rounded cursor-pointer inline-flex items-center"
+                          title="Reply via email"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </a>
+                        <button
                           onClick={(e) => handleDeleteLead(lead.id, lead.name, e)}
-                          className="p-1 text-slate-400 hover:text-red-650 rounded cursor-pointer"
+                          className="p-1 text-slate-450 hover:text-red-650 transition-colors rounded cursor-pointer"
                           title="Delete submission"
                         >
                           <Trash2 className="w-4 h-4" />

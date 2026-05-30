@@ -45,6 +45,8 @@ export default function AppointmentPage() {
   const [dbServices, setDbServices] = useState<any[]>([]);
   const [dbDoctors, setDbDoctors] = useState<any[]>([]);
   const [dbSlots, setDbSlots] = useState<string[]>([]);
+  const [slotsLoaded, setSlotsLoaded] = useState(false);
+  const [clinicSettings, setClinicSettings] = useState<any>(null);
   const [bookingRef, setBookingRef] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
 
@@ -61,13 +63,14 @@ export default function AppointmentPage() {
     }
   }, []);
 
-  // Fetch services and doctors
+  // Fetch services, doctors, and settings
   useEffect(() => {
     async function loadData() {
       try {
-        const [servicesRes, doctorsRes] = await Promise.all([
+        const [servicesRes, doctorsRes, settingsRes] = await Promise.all([
           fetch(`${API_URL}/public/services`),
-          fetch(`${API_URL}/public/doctors`)
+          fetch(`${API_URL}/public/doctors`),
+          fetch(`${API_URL}/public/settings`)
         ]);
         if (servicesRes.ok) {
           const sData = await servicesRes.json();
@@ -81,6 +84,12 @@ export default function AppointmentPage() {
             setDbDoctors(dData.data);
           }
         }
+        if (settingsRes.ok) {
+          const stData = await settingsRes.json();
+          if (stData.success && stData.data) {
+            setClinicSettings(stData.data);
+          }
+        }
       } catch (err) {
         console.warn("Could not fetch from API, falling back to static local data", err);
       }
@@ -92,19 +101,23 @@ export default function AppointmentPage() {
   useEffect(() => {
     if (!selectedDoctor || !selectedDate) {
       setDbSlots([]);
+      setSlotsLoaded(false);
       return;
     }
     async function loadSlots() {
+      setSlotsLoaded(false);
       try {
         const res = await fetch(`${API_URL}/public/appointments/slots?doctorId=${selectedDoctor}&date=${selectedDate}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.data) {
             setDbSlots(data.data);
+            setSlotsLoaded(true);
           }
         }
       } catch (err) {
         console.warn("Could not fetch slots from API, falling back to static times", err);
+        setSlotsLoaded(false);
       }
     }
     loadSlots();
@@ -216,7 +229,45 @@ export default function AppointmentPage() {
       })
     : doctors;
 
-  const displayedSlots = dbSlots.length > 0 ? dbSlots : timeSlots;
+  const getDayOfWeek = (dateStr: string) => {
+    if (!dateStr) return "";
+    const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    return days[new Date(dateStr).getDay()];
+  };
+
+  const getFallbackSlots = () => {
+    if (!selectedDate) return [];
+    if (!clinicSettings || !clinicSettings.workingHours) {
+      return timeSlots;
+    }
+    
+    const dayOfWeek = getDayOfWeek(selectedDate);
+    const schedule = clinicSettings.workingHours.find((h: any) => h.dayOfWeek === dayOfWeek);
+    if (!schedule || !schedule.isAvailable) {
+      return []; // Closed day
+    }
+    
+    const slots = [];
+    let [currentH, currentM] = schedule.startTime.split(':').map(Number);
+    const [endH, endM] = schedule.endTime.split(':').map(Number);
+    const duration = schedule.slotMinutes || 30;
+
+    while (currentH < endH || (currentH === endH && currentM < endM)) {
+      const ampm = currentH >= 12 ? "PM" : "AM";
+      const displayH = currentH % 12 || 12;
+      const timeStr12 = `${displayH.toString().padStart(2, '0')}:${currentM.toString().padStart(2, '0')} ${ampm}`;
+      slots.push(timeStr12);
+      
+      currentM += duration;
+      if (currentM >= 60) {
+        currentH += Math.floor(currentM / 60);
+        currentM %= 60;
+      }
+    }
+    return slots;
+  };
+
+  const displayedSlots = slotsLoaded ? dbSlots : getFallbackSlots();
 
   const selectedServiceObj = displayedServices.find(s => s.id === selectedService);
   const selectedDoctorObj = displayedDoctors.find(d => d.id === selectedDoctor);
@@ -426,6 +477,11 @@ export default function AppointmentPage() {
                     {!selectedDate ? (
                       <div className="h-[200px] rounded-xl border border-dashed border-slate-300 bg-slate-50 flex items-center justify-center text-slate-500 text-sm font-medium">
                         Please select a date first
+                      </div>
+                    ) : displayedSlots.length === 0 ? (
+                      <div className="h-[200px] rounded-xl border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-500 text-sm font-medium p-4 text-center">
+                        <AlertCircle className="w-8 h-8 text-amber-500 mb-2 animate-bounce" />
+                        No available slots found for this date. The clinic or doctor may be fully booked or closed on this day.
                       </div>
                     ) : (
                       <div className="grid grid-cols-3 gap-3">

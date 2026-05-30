@@ -2,6 +2,7 @@ import { Router } from 'express';
 import publicAppointments from './public/appointments';
 import publicDoctors from './public/doctors';
 import publicServices from './public/services';
+import publicSettings from './public/settings';
 
 import adminAuth from './admin/auth';
 import adminDashboard from './admin/dashboard';
@@ -13,6 +14,10 @@ import adminGallery from './admin/gallery';
 import adminReviews from './admin/reviews';
 import adminContacts from './admin/contacts';
 import adminSettings from './admin/settings';
+import adminStaff from './admin/staff';
+import adminPatients from './admin/patients';
+import adminUpload from './admin/upload';
+import adminBeforeAfter from './admin/beforeAfter';
 
 const router = Router();
 
@@ -20,6 +25,7 @@ const router = Router();
 router.use('/public/appointments', publicAppointments);
 router.use('/public/doctors', publicDoctors);
 router.use('/public/services', publicServices);
+router.use('/public/settings', publicSettings);
 
 // Admin routes
 router.use('/admin/auth', adminAuth);
@@ -32,5 +38,9 @@ router.use('/admin/gallery', adminGallery);
 router.use('/admin/reviews', adminReviews);
 router.use('/admin/contacts', adminContacts);
 router.use('/admin/settings', adminSettings);
+router.use('/admin/staff', adminStaff);
+router.use('/admin/patients', adminPatients);
+router.use('/admin/upload', adminUpload);
+router.use('/admin/before-after', adminBeforeAfter);
 
 export default router;

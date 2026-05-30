@@ -1,6 +1,12 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+
 if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: require('path').resolve(__dirname, '../../.env') });
+  const envPath = fs.existsSync(path.resolve(__dirname, '../.env'))
+    ? path.resolve(__dirname, '../.env')
+    : path.resolve(__dirname, '../../.env');
+  dotenv.config({ path: envPath });
 }
 
 import app from './app';

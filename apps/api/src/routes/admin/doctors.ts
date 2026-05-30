@@ -13,6 +13,7 @@ const CreateDoctorSchema = z.object({
   lastName: z.string().min(1),
   email: z.string().email(),
   phone: z.string().optional().nullable(),
+  avatarUrl: z.string().optional().nullable(),
   bio: z.string().optional().nullable(),
   qualification: z.string().min(1),
   specialization: z.string().min(1),
