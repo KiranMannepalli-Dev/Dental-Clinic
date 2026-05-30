@@ -25,7 +25,13 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonErr) {
+        throw new Error(`Response is not JSON. URL: ${API_URL}/admin/auth/login. Status: ${res.status}. Preview: ${text.substring(0, 150)}`);
+      }
 
       if (!res.ok) {
         throw new Error(data.error?.message || "Login failed");
