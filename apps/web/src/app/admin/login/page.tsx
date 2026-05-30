@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Lock, Mail, AlertCircle, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/lib/api";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,6 @@ export default function AdminLogin() {
     setError("");
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
       const res = await fetch(`${API_URL}/admin/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

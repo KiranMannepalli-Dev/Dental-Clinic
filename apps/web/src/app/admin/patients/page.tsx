@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -8,7 +9,6 @@ import {
   Plus, Trash2, Microscope, CreditCard, UploadCloud, Eye, DollarSign
 } from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
 export default function PatientsAdmin() {
   const router = useRouter();

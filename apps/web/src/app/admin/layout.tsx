@@ -3,13 +3,12 @@
 import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 import {
   Users, Calendar as CalendarIcon, Activity, LogOut,
   FileText, Image as ImageIcon, Star, Settings, MessageSquare,
   Menu, X, Bell, BarChart2, UserCircle, Lock, ChevronDown
 } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Check, ChevronRight, User, Calendar as CalendarIcon, Clock as ClockIcon, ArrowLeft, Stethoscope, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { services } from "@/data/services";
+import { API_URL } from "@/lib/api";
 
 // --- Static Data for Reliable Booking ---
 
@@ -49,8 +50,6 @@ export default function AppointmentPage() {
   const [clinicSettings, setClinicSettings] = useState<any>(null);
   const [bookingRef, setBookingRef] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string>("");
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
   useEffect(() => {
     if (typeof window !== "undefined") {
