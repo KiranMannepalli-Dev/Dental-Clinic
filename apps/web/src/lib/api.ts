@@ -17,7 +17,7 @@ const getApiUrl = (): string => {
     return envVal.replace(/^['"']|['"']$/g, '').replace(/\/$/, '');
   }
   
-  return LOCAL_API_URL;
+  return PRODUCTION_API_URL;
 };
 
 export const API_URL = getApiUrl();
