@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: dental-clinic-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd apps/api && npm install && npm run build
+    startCommand: cd apps/api && npx prisma db push --accept-data-loss && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://dental-clinic-jade.vercel.app

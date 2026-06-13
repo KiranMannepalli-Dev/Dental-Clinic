@@ -8,10 +8,9 @@
     "prebuild": "prisma generate",
     "postinstall": "prisma generate",
     "dev": "nodemon --exec ts-node src/server.ts",
-    "build": "tsc",
-    "start": "node dist/src/server.js",
-    "lint": "eslint src --ext .ts",
-    "typecheck": "tsc --noEmit",
+    "build": "prisma generate && tsc",
+    "start": "node startup.js",
+    "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "ts-node scripts/seed.ts"
   },

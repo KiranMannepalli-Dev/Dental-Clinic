@@ -19,7 +19,7 @@ router.get('/', async (req, res, next) => {
     const [blogs, total] = await Promise.all([
       prisma.blog.findMany({
         where,
-        include: { author: { select: { firstName: true, lastName: true, specialization: true, photoUrl: true } } },
+        include: { author: { select: { firstName: true, lastName: true, specialization: true, avatarUrl: true } } },
         orderBy: [{ publishedAt: 'desc' }],
         skip,
         take: limitNum,
@@ -57,7 +57,7 @@ router.get('/:slug', async (req, res, next) => {
       where: { slug: req.params.slug },
       include: {
         author: {
-          select: { firstName: true, lastName: true, specialization: true, photoUrl: true, slug: true },
+          select: { firstName: true, lastName: true, specialization: true, avatarUrl: true, slug: true },
         },
       },
     });
