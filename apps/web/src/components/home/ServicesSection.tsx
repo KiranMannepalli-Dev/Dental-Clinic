@@ -5,7 +5,7 @@ import { ArrowRight, CheckCircle2, Phone, Layers } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { API_URL, safeJsonFetch } from "@/lib/api";
+import { getApiUrl, safeJsonFetch, fetchWithRetry } from "@/lib/api";
 
 export function ServicesSection() {
   const [services, setServices] = useState<any[]>([]);
@@ -17,9 +17,14 @@ export function ServicesSection() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    safeJsonFetch(`${API_URL}/public/services`)
+    const apiUrl = getApiUrl();
+    fetchWithRetry(
+      () => safeJsonFetch(`${apiUrl}/public/services`, undefined, 15000),
+      2,
+      4000
+    )
       .then((data) => {
-        if (data.success && data.data) {
+        if (data?.success && data?.data) {
           const svcs = data.data;
           setServices(svcs);
           // Extract distinct categories
