@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageHero } from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Calendar, ArrowRight, Award, GraduationCap, Clock, User2, Phone, Star } from "lucide-react";
+import { Calendar, ArrowRight, Award, GraduationCap, Clock, User2, Phone, Star, RefreshCw, Wifi } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { API_URL, safeJsonFetch } from "@/lib/api";
+import { getApiUrl, safeJsonFetch, fetchWithRetry } from "@/lib/api";
 
 const highlights = [
   {
@@ -44,19 +44,40 @@ function DoctorCardSkeleton() {
 export default function SpecialistsPage() {
   const [doctors, setDoctors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isColdStart, setIsColdStart] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeSpec = searchParams.get("speciality") || "";
 
-  useEffect(() => {
-    safeJsonFetch(`${API_URL}/public/doctors`)
-      .then((data) => {
-        if (data.success) setDoctors(data.data || []);
-      })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
+  const loadDoctors = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    setIsColdStart(false);
+    const apiUrl = getApiUrl();
+    const data = await fetchWithRetry(
+      () => safeJsonFetch(`${apiUrl}/public/doctors`, undefined, 15000),
+      2,
+      4000
+    );
+    if (data?.success) {
+      setDoctors(data.data || []);
+    } else {
+      const code = data?.error?.code;
+      if (code === "REQUEST_TIMEOUT" || code === "NETWORK_ERROR") {
+        setIsColdStart(true);
+        setFetchError("The server is warming up. Please wait a moment and click Retry.");
+      } else {
+        setFetchError("Could not load doctors. Please try again.");
+      }
+    }
+    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    loadDoctors();
+  }, [loadDoctors]);
 
   // Derive specializations dynamically from the fetched doctors
   const specializations = useMemo(() => {
@@ -190,7 +211,31 @@ export default function SpecialistsPage() {
                 ))}
           </div>
 
-          {!isLoading && doctors.length === 0 && (
+          {/* Error / Cold-start state */}
+          {!isLoading && fetchError && (
+            <div className="text-center py-16 max-w-md mx-auto">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center">
+                {isColdStart ? (
+                  <Wifi className="w-6 h-6 text-amber-500" />
+                ) : (
+                  <RefreshCw className="w-6 h-6 text-slate-400" />
+                )}
+              </div>
+              <h3 className="text-base font-semibold text-slate-800 mb-2">
+                {isColdStart ? "Server is warming up…" : "Failed to load specialists"}
+              </h3>
+              <p className="text-slate-500 text-sm mb-5 leading-relaxed">{fetchError}</p>
+              <button
+                onClick={loadDoctors}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !fetchError && doctors.length === 0 && (
             <div className="text-center py-16">
               <p className="text-slate-400 text-sm">No specialists found. Please check back soon.</p>
             </div>

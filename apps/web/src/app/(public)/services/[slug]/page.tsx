@@ -1,32 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { PageHero } from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calendar, Phone, CheckCircle2, Layers, ArrowLeft, User2 } from "lucide-react";
-import { API_URL, safeJsonFetch } from "@/lib/api";
+import { ArrowRight, Calendar, Phone, CheckCircle2, Layers, ArrowLeft, User2, RefreshCw } from "lucide-react";
+import { getApiUrl, safeJsonFetch, fetchWithRetry } from "@/lib/api";
 
 export default function ServiceDetailsPage() {
   const { slug } = useParams<{ slug: string }>();
   const [service, setService] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [isColdStart, setIsColdStart] = useState(false);
+
+  const loadService = useCallback(async () => {
+    if (!slug) return;
+    setIsLoading(true);
+    setNotFound(false);
+    setIsColdStart(false);
+    const apiUrl = getApiUrl();
+    const data = await fetchWithRetry(
+      () => safeJsonFetch(`${apiUrl}/public/services/${slug}`, undefined, 15000),
+      2,
+      4000
+    );
+    if (data?.success && data?.data) {
+      setService(data.data);
+    } else {
+      const code = data?.error?.code;
+      if (code === "REQUEST_TIMEOUT" || code === "NETWORK_ERROR") {
+        setIsColdStart(true);
+      }
+      setNotFound(true);
+    }
+    setIsLoading(false);
+  }, [slug]);
 
   useEffect(() => {
-    if (!slug) return;
-    safeJsonFetch(`${API_URL}/public/services/${slug}`)
-      .then((data) => {
-        if (data.success && data.data) {
-          setService(data.data);
-        } else {
-          setNotFound(true);
-        }
-      })
-      .catch(() => setNotFound(true))
-      .finally(() => setIsLoading(false));
-  }, [slug]);
+    loadService();
+  }, [loadService]);
 
   if (isLoading) {
     return (
@@ -49,9 +63,27 @@ export default function ServiceDetailsPage() {
   if (notFound || !service) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center py-32 gap-4">
-        <Layers className="w-16 h-16 text-slate-200" />
-        <h1 className="text-2xl font-bold text-slate-700">Service Not Found</h1>
-        <p className="text-slate-500 text-sm">This service doesn't exist or may have been removed.</p>
+        {isColdStart ? (
+          <>
+            <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center">
+              <RefreshCw className="w-8 h-8 text-amber-500" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-700">Server is warming up…</h1>
+            <p className="text-slate-500 text-sm text-center max-w-xs">The server is starting up after inactivity. Please wait a moment.</p>
+            <button
+              onClick={loadService}
+              className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" /> Retry
+            </button>
+          </>
+        ) : (
+          <>
+            <Layers className="w-16 h-16 text-slate-200" />
+            <h1 className="text-2xl font-bold text-slate-700">Service Not Found</h1>
+            <p className="text-slate-500 text-sm">This service doesn't exist or may have been removed.</p>
+          </>
+        )}
         <Link href="/services" className="mt-4 inline-flex items-center gap-2 text-blue-600 font-semibold text-sm hover:underline">
           <ArrowLeft className="w-4 h-4" /> Back to Services
         </Link>

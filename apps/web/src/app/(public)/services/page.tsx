@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PageHero } from "@/components/layout/PageHero";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowRight, Calendar, Phone, ClipboardCheck, Search, Syringe, HeartPulse, CheckCircle2, Layers } from "lucide-react";
+import { ArrowRight, Calendar, Phone, ClipboardCheck, Search, Syringe, HeartPulse, CheckCircle2, Layers, RefreshCw, Wifi } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { API_URL, safeJsonFetch } from "@/lib/api";
+import { getApiUrl, safeJsonFetch, fetchWithRetry } from "@/lib/api";
 
 const SERVICE_CATEGORIES = [
   { value: "", label: "All Services" },
@@ -46,19 +46,44 @@ function ServiceCardSkeleton() {
 export default function ServicesPage() {
   const [services, setServices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isColdStart, setIsColdStart] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<any | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeCategory = searchParams.get("category") || "";
 
-  useEffect(() => {
-    safeJsonFetch(`${API_URL}/public/services`)
-      .then((data) => {
-        if (data.success) setServices(data.data || []);
-      })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
+  const loadServices = useCallback(async () => {
+    setIsLoading(true);
+    setFetchError(null);
+    setIsColdStart(false);
+
+    const apiUrl = getApiUrl();
+    const data = await fetchWithRetry(
+      () => safeJsonFetch(`${apiUrl}/public/services`, undefined, 15000),
+      2,
+      4000
+    );
+
+    if (data?.success) {
+      setServices(data.data || []);
+    } else {
+      const code = data?.error?.code;
+      if (code === "REQUEST_TIMEOUT" || code === "NETWORK_ERROR") {
+        setIsColdStart(true);
+        setFetchError(
+          "The server is warming up after a period of inactivity. Please wait a moment and click \"Retry\"."
+        );
+      } else {
+        setFetchError("Could not load services. Please try again.");
+      }
+    }
+    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    loadServices();
+  }, [loadServices]);
 
   const filteredServices = useMemo(() => {
     if (!activeCategory) return services;
@@ -161,7 +186,7 @@ export default function ServicesPage() {
                         {service.name}
                       </h3>
                       <p className="text-slate-600 mb-4 flex-grow line-clamp-3 text-xs leading-relaxed">
-                        {service.description}
+                        {service.shortDescription || service.description}
                       </p>
                       <div className="inline-flex items-center justify-center text-blue-600 font-bold group-hover:text-blue-700 transition-colors mt-auto text-xs group/link">
                         Learn more <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform duration-300 group-hover/link:translate-x-2" />
@@ -171,7 +196,31 @@ export default function ServicesPage() {
                 ))}
           </div>
 
-          {!isLoading && filteredServices.length === 0 && (
+          {/* Error / Cold-start state */}
+          {!isLoading && fetchError && (
+            <div className="text-center py-16 max-w-md mx-auto">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center">
+                {isColdStart ? (
+                  <Wifi className="w-6 h-6 text-amber-500" />
+                ) : (
+                  <RefreshCw className="w-6 h-6 text-slate-400" />
+                )}
+              </div>
+              <h3 className="text-base font-semibold text-slate-800 mb-2">
+                {isColdStart ? "Server is warming up…" : "Failed to load services"}
+              </h3>
+              <p className="text-slate-500 text-sm mb-5 leading-relaxed">{fetchError}</p>
+              <button
+                onClick={loadServices}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Retry
+              </button>
+            </div>
+          )}
+
+          {!isLoading && !fetchError && filteredServices.length === 0 && (
             <div className="text-center py-16">
               {activeCategory ? (
                 <>
