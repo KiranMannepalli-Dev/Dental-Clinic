@@ -55,7 +55,19 @@ if (process.env.NODE_ENV === 'development') {
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 100 : 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Always respond with JSON so the frontend can safely call .json()
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many requests, please try again later.',
+      },
+    });
+  },
 });
 app.use(limiter);
 

@@ -149,3 +149,56 @@
 @utility animate-spin-slow {
   animation: spin-slow 12s linear infinite;
 }
+
+@layer base {
+  .dark .admin-layout-wrapper {
+    /* bg overrides */
+    [class*="bg-white"] {
+      background-color: var(--card) !important;
+    }
+    [class*="bg-slate-50"] {
+      background-color: var(--background) !important;
+    }
+    [class*="bg-slate-100"] {
+      background-color: var(--secondary) !important;
+    }
+
+    /* text color overrides */
+    [class*="text-slate-9"],
+    [class*="text-slate-8"] {
+      color: var(--foreground) !important;
+    }
+    [class*="text-slate-7"],
+    [class*="text-slate-6"] {
+      color: var(--muted-foreground) !important;
+    }
+    [class*="text-slate-5"],
+    [class*="text-slate-4"] {
+      color: var(--muted-foreground) !important;
+      opacity: 0.8;
+    }
+
+    /* borders override */
+    [class*="border-slate-"] {
+      border-color: var(--border) !important;
+    }
+
+    /* forms overrides */
+    input, 
+    select, 
+    textarea {
+      background-color: var(--input) !important;
+      color: var(--foreground) !important;
+      border-color: var(--border) !important;
+    }
+    select option {
+      background-color: var(--popover) !important;
+      color: var(--popover-foreground) !important;
+    }
+
+    /* strong and other spans override */
+    strong {
+      color: var(--foreground) !important;
+    }
+  }
+}

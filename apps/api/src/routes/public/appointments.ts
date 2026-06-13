@@ -104,6 +104,37 @@ router.post('/', async (req, res, next) => {
     }
     serviceId = service.id;
 
+    // Validate slot availability
+    const dateStr = data.appointmentDate.split('T')[0];
+    const slots = await getAvailableSlots(doctorId, dateStr);
+    const chosenSlot = slots.find(s => s.time === data.startTime);
+    if (!chosenSlot) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: `The selected time slot ${data.startTime} is not available for this date.`
+        }
+      });
+    }
+    if (!chosenSlot.available) {
+      let msg = `The selected time slot ${data.startTime} is unavailable.`;
+      if (chosenSlot.status === 'FULLY_BOOKED') {
+        msg = `The selected time slot ${data.startTime} is fully booked. Each slot accommodates up to 3 patients.`;
+      } else if (chosenSlot.status === 'PAST') {
+        msg = `The selected time slot ${data.startTime} is in the past and cannot be booked today.`;
+      } else if (chosenSlot.status === 'BLOCKED') {
+        msg = `The selected time slot ${data.startTime} is blocked by the administrator.`;
+      }
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: msg
+        }
+      });
+    }
+
     // Generate booking reference
     const bookingRef = `BS-${new Date().getFullYear()}-${uuidv4().substring(0, 6).toUpperCase()}`;
     

@@ -239,17 +239,48 @@ router.get('/charts', async (req, res, next) => {
   }
 });
 
-// ─── Notification Count (pending appointments + unread contacts) ──────────────
+// ─── Notification Count (pending appointments + unread contacts + pending reviews) ──────────────
 router.get('/notifications', async (req, res, next) => {
   try {
-    const [pendingCount, unreadContacts] = await Promise.all([
+    const [pendingCount, unreadContacts, pendingReviews] = await Promise.all([
       prisma.appointment.count({ where: { status: 'PENDING' } }),
       prisma.contactSubmission.count({ where: { isRead: false } }),
+      prisma.review.count({ where: { isPublished: false } }),
     ]);
     res.json({
       success: true,
-      data: { pendingAppointments: pendingCount, unreadContacts, total: pendingCount + unreadContacts }
+      data: {
+        pendingAppointments: pendingCount,
+        unreadContacts,
+        pendingReviews,
+        total: pendingCount + unreadContacts + pendingReviews
+      }
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── Today's Schedule ─────────────────────────────────────────────────────────
+router.get('/today-schedule', async (req, res, next) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const appointments = await prisma.appointment.findMany({
+      where: { appointmentDate: { gte: today, lt: tomorrow } },
+      include: {
+        patient: { select: { firstName: true, lastName: true } },
+        doctor: { select: { firstName: true, lastName: true } },
+        service: { select: { name: true } },
+      },
+      orderBy: { startTime: 'asc' },
+      take: 20,
+    });
+
+    res.json({ success: true, data: appointments });
   } catch (error) {
     next(error);
   }

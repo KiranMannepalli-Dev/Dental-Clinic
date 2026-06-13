@@ -36,6 +36,7 @@ router.get('/:slug', async (req, res, next) => {
         reviews: {
           where: { isPublished: true },
           take: 5,
+          include: { patient: { select: { firstName: true, lastName: true } } },
           orderBy: { createdAt: 'desc' }
         }
       }

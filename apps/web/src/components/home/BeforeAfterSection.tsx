@@ -11,29 +11,29 @@ const gallery = [
   {
     id: 1,
     category: "Smile Makeover",
-    before: "/images/transformations/makeover_before.png",
-    after: "/images/transformations/makeover_after.png",
+    before: "/images/transformations/makeover_before.webp",
+    after: "/images/transformations/makeover_after.webp",
     title: "Complete Smile Makeover"
   },
   {
     id: 2,
     category: "Whitening",
-    before: "/images/transformations/whitening_before.png",
-    after: "/images/transformations/whitening_after.png",
+    before: "/images/transformations/whitening_before.webp",
+    after: "/images/transformations/whitening_after.webp",
     title: "Professional Teeth Whitening"
   },
   {
     id: 3,
     category: "Braces",
-    before: "/images/transformations/braces_before.png",
-    after: "/images/transformations/braces_after.png",
+    before: "/images/transformations/braces_before.webp",
+    after: "/images/transformations/braces_after.webp",
     title: "Invisalign Treatment"
   },
   {
     id: 4,
     category: "Implants",
-    before: "/images/transformations/implants_before.png",
-    after: "/images/transformations/implants_after.png",
+    before: "/images/transformations/implants_before.webp",
+    after: "/images/transformations/implants_after.webp",
     title: "Single Tooth Implant"
   }
 ];

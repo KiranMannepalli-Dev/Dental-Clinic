@@ -3,6 +3,9 @@ import publicAppointments from './public/appointments';
 import publicDoctors from './public/doctors';
 import publicServices from './public/services';
 import publicSettings from './public/settings';
+import publicBlogs from './public/blogs';
+import publicGallery from './public/gallery';
+import publicReviews from './public/reviews';
 
 import adminAuth from './admin/auth';
 import adminDashboard from './admin/dashboard';
@@ -26,6 +29,9 @@ router.use('/public/appointments', publicAppointments);
 router.use('/public/doctors', publicDoctors);
 router.use('/public/services', publicServices);
 router.use('/public/settings', publicSettings);
+router.use('/public/blogs', publicBlogs);
+router.use('/public/gallery', publicGallery);
+router.use('/public/reviews', publicReviews);
 
 // Admin routes
 router.use('/admin/auth', adminAuth);

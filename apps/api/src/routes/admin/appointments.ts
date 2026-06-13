@@ -285,4 +285,28 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+// Delete an appointment
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    
+    const existing = await prisma.appointment.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Appointment not found' }
+      });
+    }
+
+    await prisma.appointment.delete({ where: { id } });
+    
+    res.json({
+      success: true,
+      message: "Appointment deleted successfully"
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

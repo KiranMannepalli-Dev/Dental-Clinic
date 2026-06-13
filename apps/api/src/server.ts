@@ -21,7 +21,7 @@ async function startServer() {
 
   // Verify database connection (non-blocking — server starts regardless)
   prisma.$connect()
-    .then(() => console.log('✅ Database connected'))
+    .then(() => console.log('✅ Database connected directly'))
     .catch((err: Error) => console.warn(`⚠️  Database unavailable: ${err.message}\n   Start PostgreSQL or update DATABASE_URL in apps/api/.env`));
 
   // Handle graceful shutdown

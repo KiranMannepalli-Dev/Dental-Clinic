@@ -35,15 +35,15 @@ export function Navbar() {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-all duration-300 border-b bg-white/95 backdrop-blur-md shadow-sm`}
+      className={`sticky top-0 z-50 w-full transition-all duration-300 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md shadow-sm`}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-6 md:px-12 lg:px-16 xl:px-24">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          <img src="/logo.png" alt="Heshvitha Dental Logo" className="h-9 sm:h-10 w-auto object-contain" />
+          <img src="/logo.png" alt="Heshvitha Dental Logo" className="h-9 sm:h-10 w-auto object-contain bg-white dark:bg-slate-900 p-0.5 rounded-md" />
           <div className="flex flex-col leading-none">
-            <span className="text-xs sm:text-lg font-semibold tracking-tight text-slate-900 max-w-[150px] min-[400px]:max-w-[220px] sm:max-w-none truncate sm:overflow-visible">Heshvitha Multi speciality Dental</span>
-            <span className="text-[8px] min-[400px]:text-[9px] sm:text-[10px] font-medium text-slate-500 uppercase tracking-widest">Dental Hospital</span>
+            <span className="text-xs sm:text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100 max-w-[150px] min-[400px]:max-w-[220px] sm:max-w-none truncate sm:overflow-visible">Heshvitha Multi speciality Dental</span>
+            <span className="text-[8px] min-[400px]:text-[9px] sm:text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">Dental Hospital</span>
           </div>
         </Link>
 
@@ -55,8 +55,8 @@ export function Navbar() {
               href={link.href}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                 pathname === link.href
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  ? "text-blue-600 bg-blue-550 dark:bg-blue-950/40 dark:text-blue-400 font-semibold"
+                  : "text-slate-600 dark:text-slate-350 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900/60"
               }`}
             >
               {link.label}
@@ -68,9 +68,9 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <a
             href="tel:08374621025"
-            className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-350 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mr-1"
           >
-            <Phone className="h-4 w-4 text-blue-600" />
+            <Phone className="h-4 w-4 text-blue-600 dark:text-blue-500" />
             083746 21025
           </a>
           <Button className="rounded-md bg-blue-600 hover:bg-blue-700 h-10 px-5 text-sm font-medium" asChild>
@@ -82,7 +82,7 @@ export function Navbar() {
 
         {/* Mobile Hamburger */}
         <button
-          className="md:hidden p-2 rounded-md text-slate-600 hover:bg-slate-100 transition-colors"
+          className="md:hidden p-2 rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
           onClick={() => setIsOpen(!isOpen)}
           aria-label="Toggle menu"
         >
@@ -92,7 +92,7 @@ export function Navbar() {
 
       {/* Mobile Drawer */}
       {isOpen && (
-        <div className="md:hidden border-t bg-white px-4 pb-6 pt-4 shadow-sm">
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 pb-6 pt-4 shadow-sm">
           <nav className="flex flex-col gap-1 mb-6">
             {navLinks.map((link) => (
               <Link
@@ -100,8 +100,8 @@ export function Navbar() {
                 href={link.href}
                 className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
                   pathname === link.href
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-slate-700 hover:bg-slate-100"
+                    ? "text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
                 }`}
               >
                 {link.label}
@@ -109,12 +109,14 @@ export function Navbar() {
             ))}
           </nav>
           <div className="flex flex-col gap-3">
-            <a
-              href="tel:08374621025"
-              className="flex items-center justify-center gap-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-md py-3 hover:bg-slate-50"
-            >
-              <Phone className="h-4 w-4 text-blue-600" /> 083746 21025
-            </a>
+            <div className="flex gap-2">
+              <a
+                href="tel:08374621025"
+                className="flex-1 flex items-center justify-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-350 border border-slate-200 dark:border-slate-800 rounded-md py-3 hover:bg-slate-50 dark:hover:bg-slate-900"
+              >
+                <Phone className="h-4 w-4 text-blue-600 dark:text-blue-500" /> 083746 21025
+              </a>
+            </div>
             <Button className="rounded-md bg-blue-600 h-11 font-medium" asChild>
               <Link href="/appointment">
                 <Calendar className="h-4 w-4 mr-2" /> Book Appointment

@@ -1,43 +1,8 @@
-import { Star } from "lucide-react";
+"use client";
 
-const testimonials = [
-  {
-    id: 1,
-    name: "Priya Sharma",
-    treatment: "Invisalign Treatment",
-    date: "2 weeks ago",
-    content: "The best dental experience I've ever had. Dr. Arjun was incredibly professional. My Invisalign results are amazing!",
-    rating: 5,
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces"
-  },
-  {
-    id: 2,
-    name: "Rahul Verma",
-    treatment: "Dental Implants",
-    date: "1 month ago",
-    content: "The team made me feel completely at ease. The procedure was painless and recovery was faster than I expected.",
-    rating: 5,
-    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=faces"
-  },
-  {
-    id: 3,
-    name: "Anita Desai",
-    treatment: "Smile Makeover",
-    date: "3 months ago",
-    content: "Dr. Reddy transformed my smile completely! Her attention to detail and aesthetic sense is unparalleled.",
-    rating: 5,
-    avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop&crop=faces"
-  },
-  {
-    id: 4,
-    name: "Vikram Mehta",
-    treatment: "Dental Crowns",
-    date: "2 months ago",
-    content: "Wonderful clinic! Dr. Priya fitted my dental crown and it looks completely natural. Excellent follow-up care.",
-    rating: 5,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces"
-  }
-];
+import { useEffect, useState } from "react";
+import { Star, User2 } from "lucide-react";
+import { API_URL, safeJsonFetch } from "@/lib/api";
 
 /** Minimal inline Google "G" logo SVG */
 function GoogleLogo() {
@@ -51,18 +16,60 @@ function GoogleLogo() {
   );
 }
 
+function timeAgo(dateStr: string) {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
+  if (diff < 31536000) return `${Math.floor(diff / 2592000)}mo ago`;
+  return `${Math.floor(diff / 31536000)}y ago`;
+}
+
+// Fallback testimonials shown when API returns no reviews
+const FALLBACK = [
+  { id: "f1", content: "The best dental experience I've ever had. Dr. Arjun was incredibly professional. My Invisalign results are amazing!", rating: 5, patientName: "Priya Sharma", treatment: "Invisalign Treatment", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces" },
+  { id: "f2", content: "The team made me feel completely at ease. The procedure was painless and recovery was faster than I expected.", rating: 5, patientName: "Rahul Verma", treatment: "Dental Implants", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&h=80&fit=crop&crop=faces" },
+  { id: "f3", content: "Dr. Reddy transformed my smile completely! Her attention to detail and aesthetic sense is unparalleled.", rating: 5, patientName: "Anita Desai", treatment: "Smile Makeover", avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop&crop=faces" },
+  { id: "f4", content: "Wonderful clinic! My dental crown looks completely natural. Excellent follow-up care from the whole team.", rating: 5, patientName: "Vikram Mehta", treatment: "Dental Crowns", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces" },
+];
+
 export function TestimonialsSection() {
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    safeJsonFetch(`${API_URL}/public/reviews?limit=8`)
+      .then((data) => {
+        if (data.success && data.data?.length > 0) {
+          setReviews(data.data);
+        } else {
+          // Use fallbacks if no published reviews yet
+          setReviews(FALLBACK as any);
+        }
+      })
+      .catch(() => setReviews(FALLBACK as any))
+      .finally(() => setIsLoaded(true));
+  }, []);
+
+  // Show at most 4 for the homepage
+  const displayed = reviews.slice(0, 4);
+
+  const avgRating = reviews.length
+    ? (reviews.reduce((s, r) => s + (r.rating || 5), 0) / reviews.length).toFixed(1)
+    : "4.9";
+
   return (
     <section className="py-8 md:py-10 bg-slate-950 border-b border-slate-900">
       <div className="container mx-auto px-6 md:px-12 lg:px-16 xl:px-24">
 
-        {/* Minimal Header */}
+        {/* Header */}
         <div className="text-center mb-7">
           <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-widest mb-2">Patient Stories</p>
           <h2 className="text-2xl md:text-3xl font-semibold text-white mb-3">
             Smiles That Speak for Themselves
           </h2>
-          {/* Google Review Summary Row */}
+          {/* Rating Summary */}
           <div className="inline-flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-full px-4 py-1.5">
             <GoogleLogo />
             <div className="flex gap-0.5">
@@ -70,53 +77,70 @@ export function TestimonialsSection() {
                 <Star key={i} className="h-3 w-3 text-amber-500 fill-amber-500" />
               ))}
             </div>
-            <span className="text-white font-semibold text-xs">4.9</span>
+            <span className="text-white font-semibold text-xs">{avgRating}</span>
             <span className="text-slate-500 text-[10px]">·</span>
-            <span className="text-slate-400 text-[10px]">1,240+ reviews</span>
+            <span className="text-slate-400 text-[10px]">{reviews.length >= 4 ? `${reviews.length}+ reviews` : "1,240+ reviews"}</span>
           </div>
         </div>
 
-        {/* 4-column minimal card grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto justify-items-center">
-          {testimonials.map((t) => (
-            <div
-              key={t.id}
-              className="group flex flex-col w-full max-w-[240px] bg-slate-900/70 border border-slate-800 rounded-xl p-4 transition-all duration-300 hover:border-slate-700 hover:-translate-y-0.5 hover:bg-slate-900"
-            >
-              {/* Top row: stars + Google logo */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex gap-0.5">
-                  {[...Array(t.rating)].map((_, i) => (
-                    <Star key={i} className="h-3 w-3 text-amber-500 fill-amber-500" />
-                  ))}
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                  <GoogleLogo />
-                  <span className="text-slate-500 font-medium">Google</span>
-                </div>
-              </div>
+        {/* Loading skeleton */}
+        {!isLoaded ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto justify-items-center">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="w-full max-w-[240px] bg-slate-900 border border-slate-800 rounded-xl p-4 h-44 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto justify-items-center">
+            {displayed.map((t) => {
+              const patientName = t.patientName || (t.patient ? `${t.patient.firstName} ${t.patient.lastName?.charAt(0)}.` : "Patient");
+              const treatmentLabel = t.treatment || (t.doctor ? `Treated by Dr. ${t.doctor.firstName}` : "");
 
-              {/* Review text */}
-              <p className="text-slate-400 text-[12px] leading-relaxed line-clamp-4 mb-4 flex-grow">
-                "{t.content}"
-              </p>
+              return (
+                <div
+                  key={t.id}
+                  className="group flex flex-col w-full max-w-[240px] bg-slate-900/70 border border-slate-800 rounded-xl p-4 transition-all duration-300 hover:border-slate-700 hover:-translate-y-0.5 hover:bg-slate-900"
+                >
+                  {/* Stars + Google */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex gap-0.5">
+                      {Array.from({ length: t.rating || 5 }).map((_, i) => (
+                        <Star key={i} className="h-3 w-3 text-amber-500 fill-amber-500" />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                      <GoogleLogo />
+                      <span className="text-slate-500 font-medium">Google</span>
+                    </div>
+                  </div>
 
-              {/* Footer: avatar + name */}
-              <div className="flex items-center gap-2.5 pt-3 border-t border-slate-800/60">
-                <img
-                  src={t.avatar}
-                  alt={t.name}
-                  className="w-8 h-8 rounded-full object-cover border border-slate-700"
-                />
-                <div>
-                  <p className="text-white text-[12px] font-semibold leading-tight">{t.name}</p>
-                  <p className="text-slate-500 text-[10px] mt-0.5">{t.treatment} · {t.date}</p>
+                  {/* Review Text */}
+                  <p className="text-slate-400 text-[12px] leading-relaxed line-clamp-4 mb-4 flex-grow">
+                    "{t.content}"
+                  </p>
+
+                  {/* Footer */}
+                  <div className="flex items-center gap-2.5 pt-3 border-t border-slate-800/60">
+                    {t.avatar ? (
+                      <img src={t.avatar} alt={patientName} className="w-8 h-8 rounded-full object-cover border border-slate-700" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                        <User2 className="w-4 h-4 text-slate-500" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-white text-[12px] font-semibold leading-tight">{patientName}</p>
+                      <p className="text-slate-500 text-[10px] mt-0.5">
+                        {treatmentLabel && `${treatmentLabel} · `}
+                        {t.createdAt ? timeAgo(t.createdAt) : (t.date || "")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

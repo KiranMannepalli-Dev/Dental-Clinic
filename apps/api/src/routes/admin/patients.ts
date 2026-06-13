@@ -54,6 +54,65 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+const CreatePatientSchema = z.object({
+  firstName: z.string().min(2),
+  lastName: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().min(10),
+  dateOfBirth: z.string().datetime().or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).nullable().optional(),
+  gender: z.enum(['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY']).nullable().optional(),
+  address: z.string().nullable().optional(),
+  bloodGroup: z.string().nullable().optional(),
+  allergies: z.array(z.string()).optional(),
+  notes: z.string().nullable().optional()
+});
+
+// Create a new patient directly
+router.post('/', async (req, res, next) => {
+  try {
+    const data = CreatePatientSchema.parse(req.body);
+
+    const existing = await prisma.patient.findFirst({
+      where: {
+        OR: [
+          { email: data.email },
+          { phone: data.phone }
+        ]
+      }
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'ALREADY_EXISTS', message: 'Patient with this email or phone already exists' }
+      });
+    }
+
+    const patient = await prisma.patient.create({
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        gender: data.gender,
+        bloodGroup: data.bloodGroup,
+        allergies: data.allergies || [],
+        notes: data.notes,
+        address: data.address,
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: patient,
+      message: 'Patient registered successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get a patient details including appointment history
 router.get('/:id', async (req, res, next) => {
   try {
