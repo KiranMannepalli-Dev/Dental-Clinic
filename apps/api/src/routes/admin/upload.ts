@@ -1,71 +1,61 @@
-import { Router } from 'express';
-import { requireAdmin } from '../../middleware/auth';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import crypto from 'crypto';
+import { Router, Request, Response } from "express";
+import multer from "multer";
+import { requireAdmin } from "../../middleware/auth";
+import { uploadToCloudinary } from "../../utils/cloudinary";
 
 const router = Router();
-router.use(requireAdmin);
 
-// Ensure upload directory exists
-const uploadDir = path.resolve(__dirname, '../../../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Multer disk storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = crypto.randomBytes(12).toString('hex');
-    const ext = path.extname(file.originalname).toLowerCase();
-    const prefix = ext === '.pdf' ? 'doc' : 'img';
-    cb(null, `${prefix}-${uniqueSuffix}${ext || '.jpg'}`);
-  }
-});
-
+// Configure multer memory storage
 const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-  fileFilter: (req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
-    if (!allowed.includes(file.mimetype)) {
-      cb(new Error('Only JPEG, PNG, WebP images and PDF documents are allowed'));
-      return;
-    }
-    cb(null, true);
-  }
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB file size limit
+  },
 });
 
-// POST /api/v1/admin/upload
-router.post('/', upload.single('image'), (req: any, res: any) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({
+/**
+ * POST /admin/upload
+ * Secured endpoint for uploading files to Cloudinary.
+ * Accepts multipart/form-data under the key "file".
+ */
+router.post(
+  "/",
+  requireAdmin,
+  upload.single("file"),
+  async (req: Request, res: Response): Promise<any> => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: { code: "BAD_REQUEST", message: "No file provided in form field 'file'." },
+        });
+      }
+
+      const folder = (req.query.folder as string) || "dental_clinic";
+
+      // Stream the buffer to Cloudinary
+      const uploadResult = await uploadToCloudinary(req.file.buffer, folder);
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          url: uploadResult.secure_url,
+          publicId: uploadResult.public_id,
+          fileName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          size: req.file.size,
+        },
+      });
+    } catch (err: any) {
+      return res.status(500).json({
         success: false,
-        error: { code: 'BAD_REQUEST', message: 'No file uploaded' }
+        error: {
+          code: "INTERNAL_ERROR",
+          message: err.message || "Failed to upload file to Cloudinary",
+        },
       });
     }
-
-    const host = req.get('host');
-    const protocol = req.protocol;
-    const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
-
-    res.status(200).json({
-      success: true,
-      url: fileUrl,
-      filename: req.file.filename,
-      message: 'Image uploaded successfully'
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      error: { code: 'INTERNAL_ERROR', message: error.message || 'File upload failed' }
-    });
   }
-});
+);
 
 export default router;

@@ -170,6 +170,71 @@ router.patch('/:id', async (req, res, next) => {
   }
 });
 
+// Update role via PUT (used by permissions page)
+router.put('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    if (!role || !['SUPER_ADMIN', 'RECEPTIONIST', 'DOCTOR'].includes(role)) {
+      return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Invalid role provided' } });
+    }
+    const staffMember = await prisma.admin.findUnique({ where: { id } });
+    if (!staffMember) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Staff member not found' } });
+    }
+    const updated = await prisma.admin.update({
+      where: { id },
+      data: { role },
+      select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true }
+    });
+    res.json({ success: true, data: updated, message: 'Role updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Toggle active status
+router.patch('/:id/toggle-active', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (req.admin?.id === id) {
+      return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'You cannot deactivate your own account' } });
+    }
+    const staffMember = await prisma.admin.findUnique({ where: { id } });
+    if (!staffMember) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Staff member not found' } });
+    }
+    const updated = await prisma.admin.update({
+      where: { id },
+      data: { isActive: !staffMember.isActive },
+      select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true }
+    });
+    res.json({ success: true, data: updated, message: `Staff member ${updated.isActive ? 'activated' : 'deactivated'} successfully` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Reset password
+router.patch('/:id/reset-password', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'Password must be at least 6 characters' } });
+    }
+    const staffMember = await prisma.admin.findUnique({ where: { id } });
+    if (!staffMember) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Staff member not found' } });
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    await prisma.admin.update({ where: { id }, data: { passwordHash } });
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Delete staff member
 router.delete('/:id', async (req, res, next) => {
   try {

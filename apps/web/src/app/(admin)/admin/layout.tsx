@@ -9,7 +9,7 @@ import {
   FileText, Image as ImageIcon, Star, Settings, MessageSquare,
   Menu, X, Bell, BarChart2, UserCircle, Lock, ChevronDown,
   ChevronRight, Clock, CheckCircle2, XCircle, AlertCircle,
-  TrendingUp, Zap, Stethoscope
+  TrendingUp, Zap, Stethoscope, Shield, FlaskConical, ArrowLeftRight
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
@@ -67,6 +67,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [userRole, setUserRole] = useState<string>("RECEPTIONIST");
   const [userName, setUserName] = useState<string>("Admin");
+  
+  // Department State
+  const [currentDept, setCurrentDept] = useState("OP");
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -90,13 +93,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [profileMsg, setProfileMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [profileSaving, setProfileSaving] = useState(false);
 
-  const isLoginPage = pathname === "/admin/login";
+  const isRootOrLogin = pathname === "/admin" || pathname === "/admin/login";
 
   useEffect(() => {
-    if (isLoginPage) { setCheckingAuth(false); return; }
+    if (isRootOrLogin) { setCheckingAuth(false); return; }
     const token = localStorage.getItem("adminToken");
     if (!token) {
-      router.push("/admin/login");
+      router.push("/admin");
     } else {
       setIsAuthenticated(true);
       const userStr = localStorage.getItem("adminUser");
@@ -108,9 +111,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           setProfileName(u.name || "Admin");
         } catch {}
       }
+      const dept = localStorage.getItem("adminDepartment") || "OP";
+      setCurrentDept(dept);
       setCheckingAuth(false);
     }
-  }, [pathname, router, isLoginPage]);
+  }, [pathname, router, isRootOrLogin]);
 
   // Fetch notifications every 30 seconds
   const fetchNotifs = useCallback(async () => {
@@ -145,7 +150,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated || isLoginPage) return;
+    if (!isAuthenticated || isRootOrLogin) return;
     fetchNotifs();
     fetchTodaySchedule();
     const interval = setInterval(() => {
@@ -153,7 +158,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       fetchTodaySchedule();
     }, 10000);
     return () => clearInterval(interval);
-  }, [isAuthenticated, isLoginPage, fetchNotifs, fetchTodaySchedule]);
+  }, [isAuthenticated, isRootOrLogin, fetchNotifs, fetchTodaySchedule]);
 
   // Close popovers on outside click
   useEffect(() => {
@@ -218,76 +223,124 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (isLoginPage) return <>{children}</>;
+  if (isRootOrLogin) return <>{children}</>;
 
   const allNavItems = [
-    { href: "/admin/dashboard", label: "Dashboard", icon: Activity, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], badge: 0 },
-    { href: "/admin/appointments", label: "Appointments", icon: CalendarIcon, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], badge: notifData.pendingAppointments },
-    { href: "/admin/schedule", label: "Schedule Manager", icon: CalendarIcon, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], badge: 0 },
-    { href: "/admin/patients", label: "Patients", icon: Users, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], badge: 0 },
-    { href: "/admin/staff", label: "Staff Directory", icon: Users, roles: ["SUPER_ADMIN"], badge: 0 },
-    { href: "/admin/doctors", label: "Specialists", icon: Users, roles: ["SUPER_ADMIN", "RECEPTIONIST"], badge: 0 },
-    { href: "/admin/services", label: "Services", icon: Stethoscope, roles: ["SUPER_ADMIN", "RECEPTIONIST"], badge: 0 },
-    { href: "/admin/blog", label: "Blog", icon: FileText, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], badge: 0 },
-    { href: "/admin/gallery", label: "Gallery", icon: ImageIcon, roles: ["SUPER_ADMIN", "RECEPTIONIST"], badge: 0 },
-    { href: "/admin/reviews", label: "Reviews", icon: Star, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], badge: notifData.pendingReviews },
-    { href: "/admin/contacts", label: "Leads / Contacts", icon: MessageSquare, roles: ["SUPER_ADMIN", "RECEPTIONIST"], badge: notifData.unreadContacts },
-    { href: "/admin/reports", label: "Analytics", icon: BarChart2, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], badge: 0 },
-    { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["SUPER_ADMIN"], badge: 0 },
+    // OP & DOCTOR
+    { href: "/admin/dashboard", label: "Dashboard", icon: Activity, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], depts: ["OP", "DOCTOR"], badge: 0, category: "Core Operations" },
+    { href: "/admin/appointments", label: "Appointments", icon: CalendarIcon, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], depts: ["OP", "DOCTOR"], badge: notifData.pendingAppointments, category: "Core Operations" },
+    { href: "/admin/patients", label: "Patients", icon: Users, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], depts: ["OP", "DOCTOR"], badge: 0, category: "Core Operations" },
+    { href: "/admin/reports", label: "Analytics", icon: BarChart2, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], depts: ["OP", "DOCTOR"], badge: 0, category: "Core Operations" },
+    
+    // OP Only
+    { href: "/admin/schedule", label: "Schedule Manager", icon: CalendarIcon, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: 0, category: "Front Desk & Operations" },
+    { href: "/admin/doctors", label: "Specialists", icon: Users, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: 0, category: "Front Desk & Operations" },
+    { href: "/admin/services", label: "Services", icon: Stethoscope, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: 0, category: "Front Desk & Operations" },
+    { href: "/admin/blog", label: "Blog", icon: FileText, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: 0, category: "Content & Reviews" },
+    { href: "/admin/gallery", label: "Gallery", icon: ImageIcon, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: 0, category: "Content & Reviews" },
+    { href: "/admin/reviews", label: "Reviews", icon: Star, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], depts: ["OP", "DOCTOR"], badge: notifData.pendingReviews, category: "Content & Reviews" },
+    { href: "/admin/contacts", label: "Leads / Contacts", icon: MessageSquare, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: notifData.unreadContacts, category: "Content & Reviews" },
+    
+    // LAB
+    { href: "/admin/lab", label: "Lab Dashboard", icon: FlaskConical, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], depts: ["LAB"], badge: 0, category: "Laboratory" },
+
+    // Admin Settings
+    { href: "/admin/staff", label: "Admin Users", icon: Users, roles: ["SUPER_ADMIN"], depts: ["ALL"], badge: 0, category: "Administration" },
+    { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["SUPER_ADMIN"], depts: ["ALL"], badge: 0, category: "Administration" },
+    { href: "/admin/permissions", label: "Permissions", icon: Lock, roles: ["SUPER_ADMIN"], depts: ["ALL"], badge: 0, category: "Administration" },
   ];
 
-  const navItems = allNavItems.filter((item) => item.roles.includes(userRole));
+  const navItems = allNavItems.filter((item) => item.roles.includes(userRole) && (currentDept === "ALL" || item.depts.includes(currentDept)));
   const breadcrumbs = getBreadcrumbs(pathname);
   const currentPageLabel = navItems.find((i) => pathname.startsWith(i.href))?.label || "Overview";
   const roleLabel =
     userRole === "SUPER_ADMIN" ? "Owner / Director" :
     userRole === "DOCTOR" ? "Doctor" : "Receptionist";
 
-  const SidebarContent = () => (
-    <>
-      <div className="h-20 flex items-center px-4 border-b border-slate-200 dark:border-slate-900 shrink-0 bg-slate-50/50 dark:bg-slate-950/60 backdrop-blur-md">
-        <Link href="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity">
-          <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain bg-white p-1.5 rounded-md shadow-md border border-slate-200 dark:border-slate-800" />
-          <div className="flex flex-col leading-none">
-            <span className="font-semibold text-[11px] tracking-tight text-slate-900 dark:text-white leading-tight">Heshvitha Multi Speciality</span>
-            <span className="text-[8px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-1">Dental Hospital</span>
-          </div>
-        </Link>
-        <button onClick={() => setSidebarOpen(false)} className="ml-auto md:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+  const deptLabel = currentDept === "ALL" ? "Master Control" : currentDept === "LAB" ? "Laboratory" : currentDept === "DOCTOR" ? "Clinical" : "OP Admin";
 
-      <div className="p-3 flex-grow overflow-y-auto">
-        {/* Today's stat summary */}
-        {todaySchedule.length > 0 && (
-          <div className="mb-3 px-2 py-2 rounded-lg bg-blue-600/5 dark:bg-blue-600/10 border border-blue-650/15 dark:border-blue-600/20">
-            <p className="text-[9px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-              <CalendarIcon className="w-3 h-3" /> Today's Schedule
-            </p>
-            <p className="text-slate-800 dark:text-white text-sm font-semibold">{todaySchedule.length} <span className="text-slate-400 dark:text-slate-400 text-xs font-normal">Appointments</span></p>
-          </div>
-        )}
+  const SidebarContent = () => {
+    // Unique list of categories in the visible navigation items
+    const categories = Array.from(new Set(navItems.map((item) => item.category)));
 
-        <nav className="space-y-0.5">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-            return (
-              <Link key={item.href} href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${
-                  isActive
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20"
-                    : "text-slate-550 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-0.5"
-                }`}
-              >
-                <item.icon className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isActive ? "scale-110 text-white" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`} />
-                <span className="flex-1 truncate">{item.label}</span>
-                <NavBadge count={item.badge} />
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+    return (
+      <>
+        <div className="h-20 flex items-center px-4 border-b border-slate-200 dark:border-slate-900 shrink-0 bg-slate-50/50 dark:bg-slate-950/60 backdrop-blur-md">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity">
+            <img src="/logo.png" alt="Logo" className="h-10 w-auto object-contain bg-white p-1.5 rounded-md shadow-md border border-slate-200 dark:border-slate-800" />
+            <div className="flex flex-col leading-none">
+              <span className="font-semibold text-[11px] tracking-tight text-slate-900 dark:text-white leading-tight">Heshvitha Multi Speciality</span>
+              <span className="text-[8px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-1">Dental Hospital</span>
+            </div>
+          </Link>
+          <button onClick={() => setSidebarOpen(false)} className="ml-auto md:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Department Switcher */}
+        <div className="px-3 pt-3">
+          <Link href="/admin" className="flex items-center justify-between p-2 rounded-xl bg-slate-900 text-white shadow-md hover:bg-slate-800 transition-all cursor-pointer group">
+            <div className="flex items-center gap-2">
+              <div className={`w-6 h-6 rounded-md flex items-center justify-center ${currentDept === 'ALL' ? 'bg-amber-600' : currentDept === 'LAB' ? 'bg-violet-500' : currentDept === 'DOCTOR' ? 'bg-teal-500' : 'bg-blue-600'}`}>
+                {currentDept === 'ALL' ? <Shield className="w-3.5 h-3.5 text-white" /> : currentDept === 'LAB' ? <FlaskConical className="w-3.5 h-3.5 text-white" /> : currentDept === 'DOCTOR' ? <Stethoscope className="w-3.5 h-3.5 text-white" /> : <Activity className="w-3.5 h-3.5 text-white" />}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Department</span>
+                <span className="text-xs font-bold leading-tight">{deptLabel}</span>
+              </div>
+            </div>
+            <ArrowLeftRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-white transition-colors" />
+          </Link>
+        </div>
+
+        <div className="p-3 flex-grow overflow-y-auto">
+          {/* Today's stat summary */}
+          {todaySchedule.length > 0 && (
+            <div className="mb-4 px-2 py-2 rounded-lg bg-blue-600/5 dark:bg-blue-600/10 border border-blue-650/15 dark:border-blue-600/20">
+              <p className="text-[9px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                <CalendarIcon className="w-3 h-3" /> Today's Schedule
+              </p>
+              <p className="text-slate-800 dark:text-white text-sm font-semibold">{todaySchedule.length} <span className="text-slate-400 dark:text-slate-400 text-xs font-normal">Appointments</span></p>
+            </div>
+          )}
+
+          <nav className="space-y-4">
+            {categories.map((category) => {
+              const items = navItems.filter((item) => item.category === category);
+              if (items.length === 0) return null;
+
+              return (
+                <div key={category} className="space-y-1">
+                  {/* Category Header (Only visible in Master Control to keep specific depts clean) */}
+                  {currentDept === "ALL" && (
+                    <p className="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
+                      {category}
+                    </p>
+                  )}
+                  <div className="space-y-0.5">
+                    {items.map((item) => {
+                      const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+                      return (
+                        <Link key={item.href} href={item.href}
+                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 group ${
+                            isActive
+                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 font-semibold"
+                              : "text-slate-550 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-0.5"
+                          }`}
+                        >
+                          <item.icon className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${isActive ? "scale-110 text-white" : "text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300"}`} />
+                          <span className="flex-1 truncate">{item.label}</span>
+                          <NavBadge count={item.badge} />
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </nav>
+        </div>
 
       <div className="p-3 border-t border-slate-200 dark:border-slate-900 shrink-0">
         {/* Role indicator */}
@@ -314,7 +367,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </button>
       </div>
     </>
-  );
+    );
+  };
 
   return (
     <div className="admin-layout-wrapper min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row transition-colors duration-300">

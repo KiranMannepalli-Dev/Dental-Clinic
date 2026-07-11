@@ -15,21 +15,24 @@ async function getOrCreateSheet(doc, title, headers) {
 }
 
 async function seedTable(sheet, records, label) {
-  console.log(`\nSyncing ${records.length} records to [${label}]...`);
-  let success = 0;
-  for (const record of records) {
-    try {
-      const stringified = {};
-      for (const [k, v] of Object.entries(record)) {
-        stringified[k] = v !== null && v !== undefined ? v.toString() : '';
-      }
-      await sheet.addRow(stringified);
-      success++;
-    } catch (e) {
-      console.error(`  ❌ Failed: ${e.message}`);
-    }
+  if (records.length === 0) {
+    console.log(`\n[${label}] No records to sync.`);
+    return;
   }
-  console.log(`  ✅ ${success}/${records.length} synced.`);
+  console.log(`\nSyncing ${records.length} records to [${label}]...`);
+  try {
+    const stringifiedRows = records.map(record => {
+      const row = {};
+      for (const [k, v] of Object.entries(record)) {
+        row[k] = v !== null && v !== undefined ? v.toString() : '';
+      }
+      return row;
+    });
+    await sheet.addRows(stringifiedRows);
+    console.log(`  ✅ ${records.length}/${records.length} synced.`);
+  } catch (e) {
+    console.error(`  ❌ Bulk insert failed: ${e.message}`);
+  }
 }
 
 async function main() {
@@ -76,11 +79,19 @@ async function main() {
 
   // ── 4. Appointments ──────────────────────────────────────────
   const apptSheet = await getOrCreateSheet(doc, 'Appointments', ['id', 'bookingRef', 'patientId', 'doctorId', 'serviceId', 'appointmentDate', 'startTime', 'status', 'paymentStatus']);
-  await seedTable(apptSheet, (await prisma.appointment.findMany()).map(a => ({
-    id: a.id, bookingRef: a.bookingRef, patientId: a.patientId, doctorId: a.doctorId,
-    serviceId: a.serviceId, appointmentDate: a.appointmentDate, startTime: a.startTime,
-    status: a.status, paymentStatus: a.paymentStatus
-  })), 'Appointments');
+  const existingApptRows = await apptSheet.getRows();
+  const existingApptIds = new Set(existingApptRows.map(r => r.get('id')));
+  const allAppts = await prisma.appointment.findMany();
+  const newAppts = allAppts.filter(a => !existingApptIds.has(a.id));
+  if (newAppts.length === 0) {
+    console.log('\n[Appointments] Already up to date!');
+  } else {
+    await seedTable(apptSheet, newAppts.map(a => ({
+      id: a.id, bookingRef: a.bookingRef, patientId: a.patientId, doctorId: a.doctorId,
+      serviceId: a.serviceId, appointmentDate: a.appointmentDate, startTime: a.startTime,
+      status: a.status, paymentStatus: a.paymentStatus
+    })), 'Appointments');
+  }
 
   // ── 5. Leads (Contact Submissions) ───────────────────────────
   const leadsSheet = await getOrCreateSheet(doc, 'Leads', ['id', 'name', 'email', 'phone', 'subject', 'isRead', 'isResolved']);

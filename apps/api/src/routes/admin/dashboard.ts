@@ -286,4 +286,99 @@ router.get('/today-schedule', async (req, res, next) => {
   }
 });
 
+// ─── Doctor Performance Stats ─────────────────────────────────────────────────
+router.get('/doctor-stats', async (req, res, next) => {
+  try {
+    const firstDayOfMonth = new Date();
+    firstDayOfMonth.setDate(1);
+    firstDayOfMonth.setHours(0, 0, 0, 0);
+
+    const doctors = await prisma.doctor.findMany({
+      where: { isActive: true },
+      select: {
+        id: true, firstName: true, lastName: true, specialization: true,
+        rating: true, reviewCount: true, consultationFee: true,
+        appointments: {
+          where: { appointmentDate: { gte: firstDayOfMonth } },
+          select: { status: true }
+        }
+      }
+    });
+
+    const data = doctors.map((doc: any) => {
+      const total = doc.appointments.length;
+      const completed = doc.appointments.filter((a: any) => a.status === 'COMPLETED').length;
+      const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+      return {
+        id: doc.id,
+        name: `Dr. ${doc.firstName} ${doc.lastName}`,
+        specialization: doc.specialization,
+        rating: doc.rating,
+        reviewCount: doc.reviewCount,
+        consultationFee: Number(doc.consultationFee),
+        appointmentsThisMonth: total,
+        completedThisMonth: completed,
+        completionRate,
+      };
+    });
+
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── Patient Growth (last 6 months) ──────────────────────────────────────────
+router.get('/patient-growth', async (req, res, next) => {
+  try {
+    const today = new Date();
+    const data = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const month = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const nextMonth = new Date(today.getFullYear(), today.getMonth() - i + 1, 1);
+      const label = month.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });
+      const count = await prisma.patient.count({
+        where: { createdAt: { gte: month, lt: nextMonth } }
+      });
+      data.push({ month: label, patients: count });
+    }
+
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── Revenue by Doctor this month ─────────────────────────────────────────────
+router.get('/revenue-by-doctor', async (req, res, next) => {
+  try {
+    const firstDayOfMonth = new Date();
+    firstDayOfMonth.setDate(1);
+    firstDayOfMonth.setHours(0, 0, 0, 0);
+
+    const completedAppts = await prisma.appointment.findMany({
+      where: { status: 'COMPLETED', appointmentDate: { gte: firstDayOfMonth } },
+      select: {
+        doctor: { select: { firstName: true, lastName: true } },
+        service: { select: { priceMin: true } }
+      }
+    });
+
+    const revenueMap: Record<string, number> = {};
+    (completedAppts as any[]).forEach((a: any) => {
+      const name = `Dr. ${a.doctor?.firstName} ${a.doctor?.lastName}`;
+      revenueMap[name] = (revenueMap[name] || 0) + Number(a.service?.priceMin || 0);
+    });
+
+    const data = Object.entries(revenueMap)
+      .map(([name, revenue]) => ({ name, revenue }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    res.json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

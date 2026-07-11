@@ -21,6 +21,7 @@ import adminStaff from './admin/staff';
 import adminPatients from './admin/patients';
 import adminUpload from './admin/upload';
 import adminBeforeAfter from './admin/beforeAfter';
+import adminLabTests from './admin/labTests';
 import webhooks from './webhooks';
 
 const router = Router();
@@ -49,6 +50,7 @@ router.use('/admin/staff', adminStaff);
 router.use('/admin/patients', adminPatients);
 router.use('/admin/upload', adminUpload);
 router.use('/admin/before-after', adminBeforeAfter);
+router.use('/admin/lab-tests', adminLabTests);
 
 // Webhooks
 router.use('/webhooks', webhooks);

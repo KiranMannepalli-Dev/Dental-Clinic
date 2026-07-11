@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { 
   Search, Filter, Check, X, CheckSquare, AlertTriangle, 
   ChevronLeft, ChevronRight, Phone, Mail, Calendar, Clock,
-  CalendarClock, CreditCard, Receipt, Printer
+  CalendarClock, CreditCard, Receipt, Printer, Download
 } from "lucide-react";
 
 
@@ -278,6 +278,33 @@ export default function AppointmentsAdmin() {
     fetchAppointments();
   };
 
+  // CSV Export
+  const handleExportCSV = () => {
+    if (!appointments.length) return;
+    const rows = appointments.map((a: any) => ({
+      "Booking Ref": a.bookingRef,
+      "Patient Name": `${a.patient?.firstName} ${a.patient?.lastName}`,
+      "Patient Phone": a.patient?.phone || "",
+      "Patient Email": a.patient?.email || "",
+      "Doctor": `Dr. ${a.doctor?.firstName} ${a.doctor?.lastName}`,
+      "Service": a.service?.name || "",
+      "Date": new Date(a.appointmentDate).toLocaleDateString(),
+      "Start Time": a.startTime,
+      "End Time": a.endTime,
+      "Status": a.status,
+      "Payment Status": a.paymentStatus || "UNPAID",
+      "Payment Method": a.paymentMethod || "",
+    }));
+    const headers = Object.keys(rows[0]);
+    const csvRows = rows.map(r => headers.map(h => `"${String((r as any)[h]).replace(/"/g, '""')}"`).join(","));
+    const csv = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `appointments_${new Date().toISOString().split("T")[0]}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
   // Update Status Action
   const handleStatusUpdate = async (id: string, newStatus: string) => {
     setActionLoadingId(id);
@@ -414,35 +441,51 @@ export default function AppointmentsAdmin() {
         </div>
       </div>
 
-      {/* Bulk Action Toolbar */}
-      {selectedIds.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-blue-50 dark:bg-blue-955/10 border border-blue-200/80 dark:border-blue-900/30 rounded-xl animate-in slide-in-from-top-2 duration-200 shadow-sm">
-          <span className="text-xs font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block animate-pulse" />
-            {selectedIds.length} Appointments Selected
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleBulkStatusUpdate('CONFIRMED')}
-              className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-md cursor-pointer transition-all shadow-sm hover:shadow active:scale-95"
-            >
-              Bulk Confirm
-            </button>
-            <button
-              onClick={() => handleBulkStatusUpdate('CANCELLED')}
-              className="px-3.5 py-1.5 bg-red-650 hover:bg-red-700 text-white text-xs font-semibold rounded-md cursor-pointer transition-all shadow-sm hover:shadow active:scale-95"
-            >
-              Bulk Cancel
-            </button>
-            <button
-              onClick={() => setSelectedIds([])}
-              className="px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-md cursor-pointer transition-all active:scale-95"
-            >
-              Clear Selection
-            </button>
+      {/* Top Toolbar — Export + Bulk Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <button
+          onClick={handleExportCSV}
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5" /> Export CSV ({appointments.length} rows)
+        </button>
+
+        {/* Bulk Action Toolbar */}
+        {selectedIds.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-blue-50 dark:bg-blue-955/10 border border-blue-200/80 dark:border-blue-900/30 rounded-xl animate-in slide-in-from-top-2 duration-200 shadow-sm flex-1">
+            <span className="text-xs font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block animate-pulse" />
+              {selectedIds.length} Appointments Selected
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleBulkStatusUpdate('CONFIRMED')}
+                className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-md cursor-pointer transition-all shadow-sm hover:shadow active:scale-95"
+              >
+                Bulk Confirm
+              </button>
+              <button
+                onClick={() => handleBulkStatusUpdate('COMPLETED')}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md cursor-pointer transition-all shadow-sm hover:shadow active:scale-95"
+              >
+                Bulk Complete
+              </button>
+              <button
+                onClick={() => handleBulkStatusUpdate('CANCELLED')}
+                className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-md cursor-pointer transition-all shadow-sm hover:shadow active:scale-95"
+              >
+                Bulk Cancel
+              </button>
+              <button
+                onClick={() => setSelectedIds([])}
+                className="px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-850 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-md cursor-pointer transition-all active:scale-95"
+              >
+                Clear
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Main Table View */}
       <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-xl shadow-sm border border-slate-200/60 dark:border-slate-800/80 overflow-hidden hover:shadow-md transition-all duration-300">

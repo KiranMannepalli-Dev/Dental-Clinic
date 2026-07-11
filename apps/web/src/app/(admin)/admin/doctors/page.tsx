@@ -242,7 +242,7 @@ export default function DoctorsAdmin() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch(`${API_URL}/admin/upload`, {
+      const res = await fetch(`${API_URL}/admin/upload?type=image`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`
