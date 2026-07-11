@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 
-const url = process.env.DATABASE_URL || "postgresql://postgres.dgtmcdryhpbjhuiofsdc:CiACp8YnZeUfrgKR@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&sslaccept=accept_invalid_certs";
+const url = process.env.DATABASE_URL || "postgresql://postgres.dgtmcdryhpbjhuiofsdc:Hesvitha%40_02@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1&sslaccept=accept_invalid_certs";
 
 async function run() {
   console.log('Testing connection to DB URL:', url.replace(/:[^:@\n]+@/, ':****@')); // Hide password in logs

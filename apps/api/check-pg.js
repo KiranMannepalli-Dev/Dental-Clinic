@@ -24,11 +24,11 @@ async function testConnection(connectionString, label) {
 
 async function run() {
   // 1. Direct connection
-  const directUrl = process.env.DIRECT_URL || "postgresql://postgres.dgtmcdryhpbjhuiofsdc:CiACp8YnZeUfrgKR@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  const directUrl = process.env.DIRECT_URL || "postgresql://postgres.dgtmcdryhpbjhuiofsdc:Hesvitha%40_02@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
   await testConnection(directUrl, "Direct connection");
 
   // 2. Pooler connection
-  const poolerUrl = process.env.DATABASE_URL || "postgresql://postgres.dgtmcdryhpbjhuiofsdc:CiACp8YnZeUfrgKR@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true";
+  const poolerUrl = process.env.DATABASE_URL || "postgresql://postgres.dgtmcdryhpbjhuiofsdc:Hesvitha%40_02@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true";
   await testConnection(poolerUrl, "Pooler connection");
 }
 
