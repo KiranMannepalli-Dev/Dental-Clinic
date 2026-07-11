@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../../config/database';
 import { requireAdmin } from '../../middleware/auth';
 import { z } from 'zod';
+import { googleSheetsService } from '../../services/googleSheets';
 
 const router = Router();
 
@@ -77,6 +78,7 @@ router.post('/', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncBlog(blog).catch(console.error);
     res.status(201).json({ success: true, data: blog });
   } catch (error) {
     next(error);
@@ -123,6 +125,7 @@ router.put('/:id', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncBlog(updatedBlog).catch(console.error);
     res.json({ success: true, data: updatedBlog });
   } catch (error) {
     next(error);

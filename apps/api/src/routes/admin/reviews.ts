@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../../config/database';
 import { requireAdmin } from '../../middleware/auth';
 import { z } from 'zod';
+import { googleSheetsService } from '../../services/googleSheets';
 
 const router = Router();
 
@@ -55,6 +56,7 @@ router.put('/:id', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncReview(updatedReview).catch(console.error);
     res.json({ success: true, data: updatedReview });
   } catch (error) {
     next(error);

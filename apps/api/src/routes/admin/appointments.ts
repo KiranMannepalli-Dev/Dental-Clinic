@@ -3,6 +3,7 @@ import { prisma } from '../../config/database';
 import { requireAdmin } from '../../middleware/auth';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
+import { googleSheetsService } from '../../services/googleSheets';
 
 const router = Router();
 
@@ -124,6 +125,7 @@ router.patch('/:id/status', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncAppointment(appointment).catch(console.error);
     res.json({
       success: true,
       data: appointment,
@@ -163,6 +165,7 @@ router.patch('/:id/reschedule', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncAppointment(appointment).catch(console.error);
     res.json({
       success: true,
       data: appointment,
@@ -197,6 +200,7 @@ router.patch('/:id/payment', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncAppointment(appointment).catch(console.error);
     res.json({
       success: true,
       data: appointment,
@@ -275,6 +279,7 @@ router.post('/', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncAppointment(appointment).catch(console.error);
     res.status(201).json({
       success: true,
       data: appointment,

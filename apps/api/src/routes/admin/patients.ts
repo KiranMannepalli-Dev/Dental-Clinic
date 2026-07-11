@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../../config/database';
 import { requireAdmin } from '../../middleware/auth';
 import { z } from 'zod';
+import { googleSheetsService } from '../../services/googleSheets';
 
 const router = Router();
 router.use(requireAdmin);
@@ -103,6 +104,7 @@ router.post('/', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncPatient(patient).catch(console.error);
     res.status(201).json({
       success: true,
       data: patient,
@@ -213,6 +215,7 @@ router.patch('/:id', async (req, res, next) => {
       }
     });
 
+    googleSheetsService.syncPatient(updated).catch(console.error);
     res.json({
       success: true,
       data: updated,
