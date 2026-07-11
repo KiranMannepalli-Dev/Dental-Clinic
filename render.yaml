@@ -17,3 +17,11 @@ services:
         sync: false
       - key: FRONTEND_URL
         value: https://dental-clinic-jade.vercel.app
+      - key: SUPABASE_URL
+        value: https://dgtmcdryhpbjhuiofsdc.supabase.co
+      - key: SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_PnhCIjsPL3MHlewv3Rk-XA_SvTMtaD8
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_JWKS_URL
+        value: https://dgtmcdryhpbjhuiofsdc.supabase.co/auth/v1/.well-known/jwks.json
