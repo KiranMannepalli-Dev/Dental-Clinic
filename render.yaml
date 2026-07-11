@@ -25,3 +25,11 @@ services:
         sync: false
       - key: SUPABASE_JWKS_URL
         value: https://dgtmcdryhpbjhuiofsdc.supabase.co/auth/v1/.well-known/jwks.json
+      - key: GOOGLE_SERVICE_ACCOUNT_EMAIL
+        value: sheets-sync@dental-clinic-sync.iam.gserviceaccount.com
+      - key: GOOGLE_PRIVATE_KEY
+        sync: false
+      - key: GOOGLE_SHEET_ID
+        sync: false
+      - key: WEBHOOK_SECRET
+        sync: false
