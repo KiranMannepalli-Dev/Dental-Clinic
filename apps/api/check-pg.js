@@ -1,7 +1,9 @@
+require('dotenv').config();
 const { Client } = require('pg');
 
 async function testConnection(connectionString, label) {
-  console.log(`\n--- Testing ${label} ---`);
+  const sanitizedString = connectionString.replace(/:[^:@\n]+@/, ':****@');
+  console.log(`\n--- Testing ${label} (${sanitizedString}) ---`);
   const client = new Client({ connectionString });
   
   try {
@@ -21,13 +23,14 @@ async function testConnection(connectionString, label) {
 }
 
 async function run() {
-  // 1. Direct connection using IPv6
-  const directUrl = "postgresql://postgres:DentalClinic%40_02@db.pbqozoxttnibpscyqzat.supabase.co:5432/postgres";
-  await testConnection(directUrl, "Direct connection (IPv6)");
+  // 1. Direct connection
+  const directUrl = process.env.DIRECT_URL || "postgresql://postgres.dgtmcdryhpbjhuiofsdc:CiACp8YnZeUfrgKR@aws-1-ap-southeast-2.pooler.supabase.com:5432/postgres";
+  await testConnection(directUrl, "Direct connection");
 
-  // 2. Pooler connection in ap-northeast-1 (Tokyo)
-  const poolerUrl = "postgresql://postgres.pbqozoxttnibpscyqzat:DentalClinic%40_02@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require";
-  await testConnection(poolerUrl, "Pooler connection (IPv4)");
+  // 2. Pooler connection
+  const poolerUrl = process.env.DATABASE_URL || "postgresql://postgres.dgtmcdryhpbjhuiofsdc:CiACp8YnZeUfrgKR@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true";
+  await testConnection(poolerUrl, "Pooler connection");
 }
 
 run();
+
