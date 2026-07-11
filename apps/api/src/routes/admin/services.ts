@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { prisma } from '../../config/database';
 import { requireAdmin } from '../../middleware/auth';
 import { z } from 'zod';
+import { googleSheetsService } from '../../services/googleSheets';
 
 const router = Router();
 
@@ -81,6 +82,9 @@ router.post('/', async (req, res, next) => {
       }
     });
 
+    // Fire and forget sync to Google Sheets
+    googleSheetsService.syncService(service).catch(console.error);
+
     res.status(201).json({ success: true, data: service });
   } catch (error) {
     next(error);
@@ -109,6 +113,9 @@ router.put('/:id', async (req, res, next) => {
         priceMax: body.priceMax !== undefined ? (body.priceMax ? String(body.priceMax) : null) : undefined,
       }
     });
+
+    // Fire and forget sync to Google Sheets
+    googleSheetsService.syncService(updatedService).catch(console.error);
 
     res.json({ success: true, data: updatedService });
   } catch (error) {
