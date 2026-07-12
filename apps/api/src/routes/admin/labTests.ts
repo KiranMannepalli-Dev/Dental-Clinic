@@ -74,7 +74,6 @@ router.post('/', async (req, res, next) => {
         category: 'Diagnostic',
         cost: body.priority === 'STAT' ? 1200 : body.priority === 'URGENT' ? 800 : 500,
         status: 'PENDING',
-        notes: body.notes,
         // Store orderedBy in notes prefix or similar since orderedBy isn't on model directly
         notes: `Ordered By: ${body.orderedBy}. Notes: ${body.notes || ''}`
       },
