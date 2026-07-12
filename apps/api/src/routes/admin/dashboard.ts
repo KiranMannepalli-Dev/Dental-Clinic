@@ -214,21 +214,33 @@ router.get('/charts', async (req, res, next) => {
       revenue,
     }));
 
-    // Top services by bookings
-    const allServiceAppointments = await prisma.appointment.findMany({
-      select: { serviceId: true, service: { select: { name: true } } } as any,
+    // Top services by bookings (optimized database-level aggregation)
+    const groupedServices = await prisma.appointment.groupBy({
+      by: ['serviceId'],
+      _count: {
+        id: true,
+      },
+      orderBy: {
+        _count: {
+          id: 'desc',
+        },
+      },
+      take: 5,
     });
 
-    const serviceCounts: Record<string, { name: string; count: number }> = {};
-    (allServiceAppointments as any[]).forEach((appt: any) => {
-      const sid = appt.serviceId;
-      if (!serviceCounts[sid]) serviceCounts[sid] = { name: appt.service?.name || sid, count: 0 };
-      serviceCounts[sid].count++;
+    const serviceIds = groupedServices.map(g => g.serviceId);
+    const services = await prisma.service.findMany({
+      where: { id: { in: serviceIds } },
+      select: { id: true, name: true },
     });
 
-    const topServices = Object.values(serviceCounts)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+    const topServices = groupedServices.map(g => {
+      const s = services.find(x => x.id === g.serviceId);
+      return {
+        name: s?.name || 'Unknown',
+        count: g._count.id,
+      };
+    });
 
     res.json({
       success: true,
