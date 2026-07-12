@@ -66,6 +66,8 @@ export default function StaffAdmin() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("RECEPTIONIST");
+  const [editPassword, setEditPassword] = useState("");
+  const [showEditPwd, setShowEditPwd] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   // Reset password
@@ -160,6 +162,7 @@ export default function StaffAdmin() {
       const token = localStorage.getItem("adminToken");
       const payload: any = { name: editName, email: editEmail };
       if (editUser.id !== currentUserId) payload.role = editRole;
+      if (editPassword) payload.password = editPassword;
 
       const res = await fetch(`${API_URL}/admin/staff/${editUser.id}`, {
         method: "PATCH",
@@ -285,6 +288,8 @@ export default function StaffAdmin() {
     setEditName(member.name);
     setEditEmail(member.email);
     setEditRole(member.role);
+    setEditPassword("");
+    setShowEditPwd(false);
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -651,6 +656,22 @@ export default function StaffAdmin() {
                     <ShieldAlert className="w-3 h-3" /> You cannot change your own role to prevent lockout.
                   </p>
                 )}
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Update Password (Optional)</label>
+                <div className="relative">
+                  <Key className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showEditPwd ? "text" : "password"} minLength={6}
+                    value={editPassword} onChange={e => setEditPassword(e.target.value)}
+                    placeholder="Leave blank to keep current"
+                    className="w-full pl-9 pr-10 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30"
+                  />
+                  <button type="button" onClick={() => setShowEditPwd(!showEditPwd)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                    {showEditPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <div className="flex gap-3 pt-2 border-t border-slate-100">
                 <button type="button" onClick={() => setEditUser(null)}

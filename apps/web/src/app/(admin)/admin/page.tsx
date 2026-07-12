@@ -74,7 +74,7 @@ const DEPARTMENTS = [
 ];
 
 const ROLE_NAV_MAP: Record<string, string[]> = {
-  SUPER_ADMIN: ["ALL", "OP", "DOCTOR", "LAB"],
+  SUPER_ADMIN: ["ALL"],
   RECEPTIONIST: ["OP", "LAB"],
   DOCTOR: ["DOCTOR", "LAB"],
 };
