@@ -368,18 +368,44 @@ export default function AdminPortal() {
                 onClick={() => handleSelectDepartment(dept)}
                 onMouseEnter={() => setHoveredDept(dept.id)}
                 onMouseLeave={() => setHoveredDept(null)}
-                className={`relative group text-left rounded-2xl border transition-all duration-500 cursor-pointer overflow-hidden bg-slate-900/40 backdrop-blur-sm border-white/10 hover:border-white/20 hover:bg-slate-800/60 hover:-translate-y-0.5 hover:shadow-lg`}
+                className={`relative group text-left rounded-2xl border transition-all duration-500 cursor-pointer overflow-hidden bg-slate-900/40 backdrop-blur-sm border-white/10 hover:border-white/20 hover:bg-slate-800/60 hover:-translate-y-1 hover:shadow-xl hover:${dept.glow}`}
               >
-                 <div className="relative p-4 flex items-center gap-4 h-full w-full">
-                   <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${dept.gradient} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105 shrink-0`}>
-                     <Icon className="w-5 h-5 text-white" />
-                   </div>
-                   <div className="flex-grow min-w-0">
-                     <h2 className="text-sm font-bold text-white leading-snug">{dept.label}</h2>
-                     <p className="text-[10px] font-semibold text-slate-400 mt-0.5">{dept.sublabel}</p>
-                   </div>
-                   <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-white transition-all shrink-0 group-hover:translate-x-0.5" />
-                 </div>
+                <div className={`absolute inset-0 bg-gradient-to-br ${dept.gradient} opacity-0 transition-opacity duration-500 ${isHovered ? "opacity-[0.05]" : ""}`} />
+                <div className={`absolute inset-0 rounded-2xl ring-1 ${dept.ring} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+
+                <div className="relative p-5 flex flex-col h-full gap-4">
+                  <div className="flex items-start justify-between mb-1">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${dept.gradient} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${dept.accentBg} ${dept.accentText} border-white/10`}>
+                        {dept.sublabel}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold leading-tight mb-1.5 text-white">{dept.label}</h2>
+                    <p className="text-xs leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors line-clamp-2">{dept.description}</p>
+                  </div>
+
+                  <div className="space-y-1 border-t pt-3 border-white/5 transition-colors">
+                    {dept.features.slice(0, 4).map((f, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <div className={`w-1 h-1 rounded-full bg-gradient-to-r ${dept.gradient} shrink-0`} />
+                        <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-400 transition-colors line-clamp-1">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className={`mt-2 flex items-center justify-between rounded-lg px-3 py-2 transition-all duration-300 ${dept.accentBg} group-hover:bg-white/10 text-slate-400 group-hover:text-white border border-white/5 group-hover:border-white/15`}>
+                    <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+                      <Lock className="w-3 h-3" /> Require PIN
+                    </span>
+                    <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-300 ${isHovered ? "translate-x-1" : ""}`} />
+                  </div>
+                </div>
               </button>
             );
           })}
@@ -395,70 +421,58 @@ export default function AdminPortal() {
       {/* ─── PIN Modal ────────────────────────────────────────────────────── */}
       {pinModalDept && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className={`p-6 bg-gradient-to-br ${pinModalDept.gradient} relative`}>
-              <button onClick={() => setPinModalDept(null)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors cursor-pointer">✕</button>
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner mb-4">
-                  <pinModalDept.icon className="w-8 h-8 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-white">{pinModalDept.label} Portal</h3>
-                <p className="text-white/80 text-sm mt-1">Enter your 4-digit security PIN</p>
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-[280px] p-6 animate-in fade-in zoom-in-95 duration-200 relative">
+            <button onClick={() => setPinModalDept(null)} className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 text-sm cursor-pointer">✕</button>
+            <div className="text-center mb-5">
+              <h3 className="text-base font-bold text-white">{pinModalDept.label} Portal</h3>
+              <p className="text-xs text-slate-400 mt-1">Enter 4-digit security PIN</p>
+            </div>
+
+            <form onSubmit={handlePinSubmit} className="space-y-4">
+              <input
+                type="password"
+                pattern="[0-9]*"
+                inputMode="numeric"
+                maxLength={4}
+                autoFocus
+                required
+                value={pin}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, "");
+                  setPin(val);
+                  setPinError(false);
+                }}
+                placeholder="••••"
+                className="w-full text-center tracking-[1em] text-2xl py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-800 focus:outline-none focus:border-blue-500 font-mono font-bold transition-all"
+              />
+
+              {pinError && (
+                <p className="text-center text-red-500 text-[10px] font-bold animate-pulse">
+                  Incorrect PIN. Try again.
+                </p>
+              )}
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPinModalDept(null)}
+                  className="flex-1 py-2 border border-slate-800 hover:bg-slate-800 text-slate-400 font-bold rounded-lg text-xs cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={pin.length !== 4 || isVerifying}
+                  className={`flex-1 py-2 rounded-lg font-bold text-white text-xs transition-all ${
+                    pin.length === 4 && !isVerifying
+                      ? `bg-blue-600 hover:bg-blue-700 shadow-md cursor-pointer`
+                      : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                  }`}
+                >
+                  {isVerifying ? "Verifying..." : "Access"}
+                </button>
               </div>
-            </div>
-
-            <div className="p-8">
-              <form onSubmit={handlePinSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Enter Security PIN</label>
-                  <input
-                    type="password"
-                    pattern="[0-9]*"
-                    inputMode="numeric"
-                    maxLength={4}
-                    autoFocus
-                    required
-                    value={pin}
-                    onChange={e => {
-                      const val = e.target.value.replace(/\D/g, "");
-                      setPin(val);
-                      setPinError(false);
-                    }}
-                    placeholder="••••"
-                    className="w-full text-center tracking-[1.2em] text-3xl py-3.5 bg-slate-950 border border-slate-800 rounded-2xl text-white placeholder-slate-800 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 font-mono font-bold transition-all"
-                  />
-                </div>
-
-                {pinError && (
-                  <p className="text-center text-red-500 text-xs font-bold animate-bounce">
-                    Incorrect PIN. Try again.
-                  </p>
-                )}
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setPinModalDept(null)}
-                    className="flex-1 py-3 border border-slate-850 hover:bg-slate-850/50 text-slate-350 font-bold rounded-xl text-xs cursor-pointer transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={pin.length !== 4 || isVerifying}
-                    className={`flex-1 py-3 rounded-xl font-bold text-white text-xs transition-all ${
-                      pin.length === 4 && !isVerifying
-                        ? `bg-gradient-to-r ${pinModalDept.gradient} shadow-lg hover:opacity-90 cursor-pointer`
-                        : "bg-slate-800 text-slate-500 cursor-not-allowed"
-                    }`}
-                  >
-                    {isVerifying ? "Verifying..." : "Access Portal"}
-                  </button>
-                </div>
-                
-                <p className="text-center text-[10px] text-slate-555 font-bold uppercase tracking-wider">Demo PIN: 1234</p>
-              </form>
-            </div>
+            </form>
           </div>
         </div>
       )}
