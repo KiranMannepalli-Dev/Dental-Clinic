@@ -238,7 +238,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/services", label: "Services", icon: Stethoscope, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: 0, category: "Front Desk & Operations" },
     { href: "/admin/blog", label: "Blog", icon: FileText, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: 0, category: "Content & Reviews" },
     { href: "/admin/gallery", label: "Gallery", icon: ImageIcon, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: 0, category: "Content & Reviews" },
-    { href: "/admin/reviews", label: "Reviews", icon: Star, roles: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"], depts: ["OP", "DOCTOR"], badge: notifData.pendingReviews, category: "Content & Reviews" },
+    { href: "/admin/reviews", label: "Reviews", icon: Star, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: notifData.pendingReviews, category: "Content & Reviews" },
     { href: "/admin/contacts", label: "Leads / Contacts", icon: MessageSquare, roles: ["SUPER_ADMIN", "RECEPTIONIST"], depts: ["OP"], badge: notifData.unreadContacts, category: "Content & Reviews" },
     
     // LAB
