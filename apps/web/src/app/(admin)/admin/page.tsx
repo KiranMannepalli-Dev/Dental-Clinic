@@ -433,29 +433,56 @@ export default function AdminPortal() {
               </div>
             </div>
 
-            <div className="p-8 pb-10">
-              <form onSubmit={handlePinSubmit}>
-                <div className="flex justify-center gap-4 mb-8">
-                  {[0, 1, 2, 3].map(i => (
-                    <div key={i} className={`w-4 h-4 rounded-full transition-all duration-300 ${pin.length > i ? "bg-white scale-110 shadow-[0_0_10px_rgba(255,255,255,0.5)]" : "bg-slate-800 border border-slate-700"} ${pinError ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] border-red-500 animate-pulse" : ""}`} />
-                  ))}
+            <div className="p-8">
+              <form onSubmit={handlePinSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Enter Security PIN</label>
+                  <input
+                    type="password"
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                    maxLength={4}
+                    autoFocus
+                    required
+                    value={pin}
+                    onChange={e => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      setPin(val);
+                      setPinError(false);
+                    }}
+                    placeholder="••••"
+                    className="w-full text-center tracking-[1.2em] text-3xl py-3.5 bg-slate-950 border border-slate-800 rounded-2xl text-white placeholder-slate-800 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 font-mono font-bold transition-all"
+                  />
                 </div>
 
-                {pinError && <p className="text-center text-red-500 text-sm font-semibold mb-6 animate-bounce">Incorrect PIN. Try again.</p>}
+                {pinError && (
+                  <p className="text-center text-red-500 text-xs font-bold animate-bounce">
+                    Incorrect PIN. Try again.
+                  </p>
+                )}
 
-                <div className="grid grid-cols-3 gap-3 max-w-[240px] mx-auto">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                    <button key={num} type="button" onClick={() => handlePinDigit(num.toString())} className="h-14 rounded-2xl bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 text-white text-xl font-medium transition-all active:scale-95 cursor-pointer">{num}</button>
-                  ))}
-                  <button type="button" onClick={() => setPinModalDept(null)} className="h-14 rounded-2xl text-slate-500 hover:text-slate-300 text-sm font-bold transition-all active:scale-95 cursor-pointer">Cancel</button>
-                  <button type="button" onClick={() => handlePinDigit("0")} className="h-14 rounded-2xl bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 text-white text-xl font-medium transition-all active:scale-95 cursor-pointer">0</button>
-                  <button type="button" onClick={handlePinBackspace} className="h-14 rounded-2xl bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 text-white text-xl font-medium transition-all active:scale-95 flex items-center justify-center cursor-pointer">⌫</button>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setPinModalDept(null)}
+                    className="flex-1 py-3 border border-slate-850 hover:bg-slate-850/50 text-slate-350 font-bold rounded-xl text-xs cursor-pointer transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={pin.length !== 4 || isVerifying}
+                    className={`flex-1 py-3 rounded-xl font-bold text-white text-xs transition-all ${
+                      pin.length === 4 && !isVerifying
+                        ? `bg-gradient-to-r ${pinModalDept.gradient} shadow-lg hover:opacity-90 cursor-pointer`
+                        : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                    }`}
+                  >
+                    {isVerifying ? "Verifying..." : "Access Portal"}
+                  </button>
                 </div>
-
-                <button type="submit" disabled={pin.length !== 4 || isVerifying} className={`w-full mt-8 py-3.5 rounded-xl font-bold text-white transition-all ${pin.length === 4 ? `bg-gradient-to-r ${pinModalDept.gradient} shadow-lg hover:opacity-90 cursor-pointer` : "bg-slate-800 text-slate-500 cursor-not-allowed"}`}>
-                  {isVerifying ? "Verifying..." : "Access Dashboard"}
-                </button>
-                <p className="text-center mt-4 text-xs text-slate-500 font-medium">Demo PIN: 1234</p>
+                
+                <p className="text-center text-[10px] text-slate-555 font-bold uppercase tracking-wider">Demo PIN: 1234</p>
               </form>
             </div>
           </div>
