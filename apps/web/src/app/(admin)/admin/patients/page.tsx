@@ -21,6 +21,8 @@ export default function PatientsAdmin() {
   const [filterGender, setFilterGender] = useState("");
   const [filterBloodGroup, setFilterBloodGroup] = useState("");
   const [sortBy, setSortBy] = useState("name-asc");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
   // New Patient Form states
   const [isAddingPatient, setIsAddingPatient] = useState(false);
@@ -619,6 +621,16 @@ export default function PatientsAdmin() {
     .filter((pat) => {
       if (filterGender && pat.gender !== filterGender) return false;
       if (filterBloodGroup && pat.bloodGroup !== filterBloodGroup) return false;
+      if (filterStartDate) {
+        const start = new Date(filterStartDate);
+        start.setHours(0, 0, 0, 0);
+        if (new Date(pat.createdAt) < start) return false;
+      }
+      if (filterEndDate) {
+        const end = new Date(filterEndDate);
+        end.setHours(23, 59, 59, 999);
+        if (new Date(pat.createdAt) > end) return false;
+      }
       return true;
     })
     .sort((a, b) => {
@@ -722,6 +734,26 @@ export default function PatientsAdmin() {
                 <option value="O+">O+</option>
                 <option value="O-">O-</option>
               </select>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-450 font-medium">Registered From:</span>
+              <input
+                type="date"
+                value={filterStartDate}
+                onChange={(e) => { setFilterStartDate(e.target.value); setPage(1); }}
+                className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold text-xs"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-450 font-medium">To:</span>
+              <input
+                type="date"
+                value={filterEndDate}
+                onChange={(e) => { setFilterEndDate(e.target.value); setPage(1); }}
+                className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold text-xs"
+              />
             </div>
 
             <div className="flex items-center gap-1.5 sm:ml-auto">
