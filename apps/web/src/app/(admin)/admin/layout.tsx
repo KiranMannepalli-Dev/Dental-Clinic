@@ -254,8 +254,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const breadcrumbs = getBreadcrumbs(pathname);
   const currentPageLabel = navItems.find((i) => pathname.startsWith(i.href))?.label || "Overview";
   const roleLabel =
-    userRole === "SUPER_ADMIN" ? "Owner / Director" :
-    userRole === "DOCTOR" ? "Doctor" : "Receptionist";
+    userRole === "SUPER_ADMIN"
+      ? (currentDept === "ALL" ? "Owner / Director" : (currentDept === "DOCTOR" ? "Doctor" : currentDept === "LAB" ? "Lab Technician" : "Receptionist"))
+      : (userRole === "DOCTOR" ? "Doctor" : "Receptionist");
 
   const deptLabel = currentDept === "ALL" ? "Master Control" : currentDept === "LAB" ? "Laboratory" : currentDept === "DOCTOR" ? "Clinical" : "OP Admin";
 
