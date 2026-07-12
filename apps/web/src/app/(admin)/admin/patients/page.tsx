@@ -23,6 +23,7 @@ export default function PatientsAdmin() {
   const [sortBy, setSortBy] = useState("name-asc");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+  const [currentDept, setCurrentDept] = useState("OP");
 
   // New Patient Form states
   const [isAddingPatient, setIsAddingPatient] = useState(false);
@@ -146,6 +147,8 @@ export default function PatientsAdmin() {
   };
 
   useEffect(() => {
+    const dept = localStorage.getItem("adminDepartment") || "OP";
+    setCurrentDept(dept);
     fetchPatients();
     fetchServices();
     const interval = setInterval(fetchPatients, 10000);
@@ -1101,14 +1104,16 @@ export default function PatientsAdmin() {
                       >
                         <Microscope className="w-3.5 h-3.5" /> Clinical Tests ({patientDetail.medicalTests?.length || 0})
                       </button>
-                      <button 
-                        onClick={() => { setActiveSubTab('billing'); setIsAddingTest(false); setIsAddingInvoice(false); setIsAddingReport(false); }}
-                        className={`flex-grow py-2 px-3 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1 cursor-pointer ${
-                          activeSubTab === 'billing' ? 'bg-white dark:bg-slate-800 text-blue-650 dark:text-blue-400 shadow-sm border border-slate-200/50 dark:border-slate-705' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                        }`}
-                      >
-                        <CreditCard className="w-3.5 h-3.5" /> Billing ({patientDetail.billingInvoices?.length || 0})
-                      </button>
+                      {currentDept !== "DOCTOR" && (
+                        <button 
+                          onClick={() => { setActiveSubTab('billing'); setIsAddingTest(false); setIsAddingInvoice(false); setIsAddingReport(false); }}
+                          className={`flex-grow py-2 px-3 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1 cursor-pointer ${
+                            activeSubTab === 'billing' ? 'bg-white dark:bg-slate-800 text-blue-650 dark:text-blue-400 shadow-sm border border-slate-200/50 dark:border-slate-705' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                          }`}
+                        >
+                          <CreditCard className="w-3.5 h-3.5" /> Billing ({patientDetail.billingInvoices?.length || 0})
+                        </button>
+                      )}
                       <button 
                         onClick={() => { setActiveSubTab('reports'); setIsAddingTest(false); setIsAddingInvoice(false); setIsAddingReport(false); }}
                         className={`flex-grow py-2 px-3 text-xs font-semibold rounded-md transition-colors flex items-center justify-center gap-1 cursor-pointer ${
@@ -1299,9 +1304,11 @@ export default function PatientsAdmin() {
                                         </span>
                                       </td>
                                       <td className="p-3 text-right">
-                                        <button onClick={() => handleDeleteTest(t.id)} className="p-1 text-slate-400 hover:text-red-650 cursor-pointer">
-                                          <Trash2 className="w-3.5 h-3.5"/>
-                                        </button>
+                                        {currentDept !== "DOCTOR" && (
+                                          <button onClick={() => handleDeleteTest(t.id)} className="p-1 text-slate-400 hover:text-red-650 cursor-pointer">
+                                            <Trash2 className="w-3.5 h-3.5"/>
+                                          </button>
+                                        )}
                                       </td>
                                     </tr>
                                   ))}
@@ -1313,7 +1320,7 @@ export default function PatientsAdmin() {
                       )}
 
                       {/* SUBTAB 3: BILLING & INVOICES */}
-                      {activeSubTab === 'billing' && (
+                      {activeSubTab === 'billing' && currentDept !== 'DOCTOR' && (
                         <div className="space-y-4">
                           <div className="flex justify-between items-center">
                             <h5 className="text-xs font-semibold text-slate-755 dark:text-slate-350 uppercase tracking-wider">Hospital Invoice Ledger</h5>
@@ -1513,7 +1520,7 @@ export default function PatientsAdmin() {
                         <div className="space-y-4">
                           <div className="flex justify-between items-center">
                             <h5 className="text-xs font-semibold text-slate-755 dark:text-slate-355 uppercase tracking-wider">Diagnostic Scan Drawer</h5>
-                            {!isAddingReport && (
+                            {currentDept !== "DOCTOR" && !isAddingReport && (
                               <button 
                                 onClick={() => setIsAddingReport(true)}
                                 className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-955 dark:bg-slate-850 hover:bg-slate-800 text-white rounded-md text-[10px] font-semibold cursor-pointer transition-colors"
@@ -1608,9 +1615,11 @@ export default function PatientsAdmin() {
                                       <a href={r.fileUrl} target="_blank" rel="noreferrer" className="text-[10px] font-semibold text-blue-650 dark:text-blue-455 hover:text-blue-855 flex items-center gap-0.5 cursor-pointer">
                                         <Eye className="w-3.5 h-3.5"/> View File
                                       </a>
-                                      <button onClick={() => handleDeleteReport(r.id)} className="text-[10px] font-semibold text-slate-400 hover:text-red-650 cursor-pointer">
-                                        <Trash2 className="w-3.5 h-3.5"/>
-                                      </button>
+                                      {currentDept !== "DOCTOR" && (
+                                        <button onClick={() => handleDeleteReport(r.id)} className="text-[10px] font-semibold text-slate-400 hover:text-red-650 cursor-pointer">
+                                          <Trash2 className="w-3.5 h-3.5"/>
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
