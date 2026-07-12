@@ -599,12 +599,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <ThemeToggle />
 
               {/* Avatar / Profile button */}
-              <button
-                onClick={() => setProfileOpen(true)}
-                className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-md cursor-pointer hover:scale-105 transition-transform"
-              >
-                <span className="font-bold text-xs text-white uppercase">{userName.substring(0, 2)}</span>
-              </button>
+              {currentDept === "ALL" && (
+                <button
+                  onClick={() => setProfileOpen(true)}
+                  className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center border border-slate-200 dark:border-slate-800 shadow-md cursor-pointer hover:scale-105 transition-transform"
+                >
+                  <span className="font-bold text-xs text-white uppercase">{userName.substring(0, 2)}</span>
+                </button>
+              )}
             </div>
           </div>
         </header>
