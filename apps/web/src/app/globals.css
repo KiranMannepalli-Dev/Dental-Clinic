@@ -59,23 +59,23 @@
 
 @layer base {
   :root {
-    --background: oklch(0.985 0.004 240);
-    --foreground: oklch(0.18 0.01 240);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.18 0.01 240);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.18 0.01 240);
+    --background: oklch(0.965 0.005 240);
+    --foreground: oklch(0.22 0.01 240);
+    --card: oklch(0.985 0.003 240);
+    --card-foreground: oklch(0.22 0.01 240);
+    --popover: oklch(0.985 0.003 240);
+    --popover-foreground: oklch(0.22 0.01 240);
     --primary: oklch(0.205 0 0);
     --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.96 0.005 240);
+    --secondary: oklch(0.94 0.006 240);
     --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.96 0.005 240);
-    --muted-foreground: oklch(0.5 0.01 240);
-    --accent: oklch(0.96 0.005 240);
+    --muted: oklch(0.94 0.006 240);
+    --muted-foreground: oklch(0.52 0.01 240);
+    --accent: oklch(0.94 0.006 240);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0.006 240);
-    --input: oklch(0.922 0.006 240);
+    --border: oklch(0.90 0.006 240);
+    --input: oklch(0.95 0.006 240);
     --ring: oklch(0.708 0.01 240);
     --radius: 0.5rem;
   }
