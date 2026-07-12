@@ -457,29 +457,29 @@ export default function LabDashboard() {
               </div>
             ) : (
               orders.filter(o => o.fileUrl).map(o => (
-                <div key={o.id} className="border border-slate-200/65 rounded-xl p-4 bg-slate-50/50 flex flex-col justify-between hover:shadow-md transition-all">
+                <div key={o.id} className="border border-slate-200/65 dark:border-slate-800/60 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="font-mono text-[10px] font-bold text-violet-650 bg-violet-50 px-2 py-0.5 rounded border border-violet-150">{o.id}</span>
-                      <span className="text-[10px] font-bold text-slate-400">{new Date(o.completedAt || o.orderedAt).toLocaleDateString("en-IN")}</span>
+                      <span className="font-mono text-[10px] font-bold text-violet-650 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 px-2 py-0.5 rounded border border-violet-150 dark:border-violet-900/40">{o.id}</span>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{new Date(o.completedAt || o.orderedAt).toLocaleDateString("en-IN")}</span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-800 line-clamp-1">{o.patientName}</h4>
-                      <p className="text-xs text-slate-500 font-semibold">{o.testName}</p>
+                      <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-1">{o.patientName}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{o.testName}</p>
                     </div>
                     {o.result && (
-                      <p className="text-xs bg-emerald-50 text-emerald-850 p-2 rounded-lg border border-emerald-150 line-clamp-2">
+                      <p className="text-xs bg-emerald-50 dark:bg-emerald-950/20 text-emerald-850 dark:text-emerald-450 p-2 rounded-lg border border-emerald-150 dark:border-emerald-900/30 line-clamp-2">
                         {o.result}
                       </p>
                     )}
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-150 flex gap-2">
+                  <div className="mt-4 pt-3 border-t border-slate-150 dark:border-slate-850 flex gap-2">
                     <a
                       href={o.fileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex-1 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-750 text-xs font-bold rounded-lg border border-violet-200/50 text-center flex items-center justify-center gap-1 cursor-pointer"
+                      className="flex-1 py-1.5 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900 text-violet-750 dark:text-violet-400 text-xs font-bold rounded-lg border border-violet-200/50 dark:border-violet-800 text-center flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" /> View File
                     </a>
