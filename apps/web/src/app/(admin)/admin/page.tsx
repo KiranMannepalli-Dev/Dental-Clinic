@@ -368,44 +368,18 @@ export default function AdminPortal() {
                 onClick={() => handleSelectDepartment(dept)}
                 onMouseEnter={() => setHoveredDept(dept.id)}
                 onMouseLeave={() => setHoveredDept(null)}
-                className={`relative group text-left rounded-2xl border transition-all duration-500 cursor-pointer overflow-hidden bg-slate-900/40 backdrop-blur-sm border-white/10 hover:border-white/20 hover:bg-slate-800/60 hover:-translate-y-1 hover:shadow-xl hover:${dept.glow}`}
+                className={`relative group text-left rounded-2xl border transition-all duration-500 cursor-pointer overflow-hidden bg-slate-900/40 backdrop-blur-sm border-white/10 hover:border-white/20 hover:bg-slate-800/60 hover:-translate-y-0.5 hover:shadow-lg`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${dept.gradient} opacity-0 transition-opacity duration-500 ${isHovered ? "opacity-[0.05]" : ""}`} />
-                <div className={`absolute inset-0 rounded-2xl ring-1 ${dept.ring} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-
-                <div className="relative p-5 flex flex-col h-full gap-4">
-                  <div className="flex items-start justify-between mb-1">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${dept.gradient} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
-                      <Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${dept.accentBg} ${dept.accentText} border-white/10`}>
-                        {dept.sublabel}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold leading-tight mb-1.5 text-white">{dept.label}</h2>
-                    <p className="text-xs leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors line-clamp-2">{dept.description}</p>
-                  </div>
-
-                  <div className="space-y-1 border-t pt-3 border-white/5 transition-colors">
-                    {dept.features.slice(0, 4).map((f, i) => (
-                      <div key={i} className="flex items-center gap-1.5">
-                        <div className={`w-1 h-1 rounded-full bg-gradient-to-r ${dept.gradient} shrink-0`} />
-                        <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-400 transition-colors line-clamp-1">{f}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className={`mt-2 flex items-center justify-between rounded-lg px-3 py-2 transition-all duration-300 ${dept.accentBg} group-hover:bg-white/10 text-slate-400 group-hover:text-white border border-white/5 group-hover:border-white/15`}>
-                    <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
-                      <Lock className="w-3 h-3" /> Require PIN
-                    </span>
-                    <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-300 ${isHovered ? "translate-x-1" : ""}`} />
-                  </div>
-                </div>
+                 <div className="relative p-4 flex items-center gap-4 h-full w-full">
+                   <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${dept.gradient} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105 shrink-0`}>
+                     <Icon className="w-5 h-5 text-white" />
+                   </div>
+                   <div className="flex-grow min-w-0">
+                     <h2 className="text-sm font-bold text-white leading-snug">{dept.label}</h2>
+                     <p className="text-[10px] font-semibold text-slate-400 mt-0.5">{dept.sublabel}</p>
+                   </div>
+                   <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-white transition-all shrink-0 group-hover:translate-x-0.5" />
+                 </div>
               </button>
             );
           })}
