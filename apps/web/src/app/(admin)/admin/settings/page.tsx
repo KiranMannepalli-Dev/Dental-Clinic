@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Settings, Save, Globe, Share2, Calendar, MapPin, 
-  Trash2, Plus, Info, Check, X, ShieldAlert, Clock
+  Trash2, Plus, Info, Check, X, ShieldAlert, Clock, Lock
 } from "lucide-react";
 
 
@@ -18,7 +18,7 @@ interface Holiday {
 
 export default function SettingsAdmin() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'general' | 'social' | 'seo' | 'holidays' | 'hours'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'social' | 'seo' | 'holidays' | 'hours' | 'security'>('general');
   const [isLoading, setIsLoading] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -62,6 +62,14 @@ export default function SettingsAdmin() {
   const [holidayType, setHolidayType] = useState("holiday");
   const [holidayLoading, setHolidayLoading] = useState(false);
 
+  // Security settings
+  const [securityPin, setSecurityPin] = useState("1234");
+  const [workspaceAccess, setWorkspaceAccess] = useState<any>({
+    OP: ["SUPER_ADMIN", "RECEPTIONIST"],
+    DOCTOR: ["SUPER_ADMIN", "DOCTOR"],
+    LAB: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"]
+  });
+
   const fetchSettings = async () => {
     setIsLoading(true);
     try {
@@ -95,6 +103,8 @@ export default function SettingsAdmin() {
         setMapLat(s.mapLat || 17.3850);
         setMapLng(s.mapLng || 78.4867);
         setAnalyticsId(s.analyticsId || "");
+        if (s.securityPin) setSecurityPin(s.securityPin);
+        if (s.workspaceAccess) setWorkspaceAccess(s.workspaceAccess);
 
         // Social
         const sl = s.socialLinks || {};
@@ -157,7 +167,9 @@ export default function SettingsAdmin() {
         workingHours,
         seoTitle: seoTitle || null,
         seoDescription: seoDescription || null,
-        analyticsId: analyticsId || null
+        analyticsId: analyticsId || null,
+        securityPin,
+        workspaceAccess
       };
 
       const res = await fetch(`${API_URL}/admin/settings`, {
@@ -302,13 +314,21 @@ export default function SettingsAdmin() {
         >
           <Clock className="w-3.5 h-3.5" /> Working Hours
         </button>
+        <button 
+          onClick={() => setActiveTab('security')}
+          className={`pb-2.5 px-4 text-xs font-bold tracking-wider uppercase border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${
+            activeTab === 'security' ? 'border-blue-650 text-blue-650 scale-102 font-bold' : 'border-transparent text-slate-400 hover:text-slate-700'
+          }`}
+        >
+          <Lock className="w-3.5 h-3.5" /> Workspace Security
+        </button>
       </div>
 
       {/* TABS CONTAINER */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 p-6 shadow-sm">
         
         {/* TABS 1, 2, 3, 5: Site Settings Form */}
-        {(activeTab === 'general' || activeTab === 'social' || activeTab === 'seo' || activeTab === 'hours') && (
+        {(activeTab === 'general' || activeTab === 'social' || activeTab === 'seo' || activeTab === 'hours' || activeTab === 'security') && (
           <form onSubmit={handleSaveSettings} className="space-y-6">
             
             {/* General Tab */}
@@ -569,6 +589,88 @@ export default function SettingsAdmin() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* Workspace Security Tab */}
+            {activeTab === 'security' && (
+              <div className="space-y-6">
+                <h3 className="font-bold text-slate-900 text-sm pb-2 border-b border-slate-100 flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-blue-600" /> Workspace Security Settings
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Change PIN Card */}
+                  <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 space-y-4">
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-805 dark:text-slate-200">Security PIN</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Change the 4-digit PIN required to enter all workspaces.</p>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 max-w-[200px]">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">PIN Code</label>
+                      <input
+                        type="text"
+                        pattern="[0-9]*"
+                        inputMode="numeric"
+                        maxLength={4}
+                        minLength={4}
+                        required
+                        value={securityPin}
+                        onChange={e => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          setSecurityPin(val);
+                        }}
+                        placeholder="1234"
+                        className="py-2.5 px-3 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-white rounded-xl text-center tracking-[1em] text-lg font-mono font-bold focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Edit Roles Access */}
+                  <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 space-y-4">
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-805 dark:text-slate-200">Workspace Allowed Roles</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Configure which user roles are permitted to access each department.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {["OP", "DOCTOR", "LAB"].map(dept => {
+                        const allowed = workspaceAccess[dept] || [];
+                        return (
+                          <div key={dept} className="space-y-2 border-b border-slate-200/40 pb-3 last:border-b-0 last:pb-0">
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-350">{dept === "OP" ? "OP Admin Portal" : dept === "DOCTOR" ? "Clinical Portal" : "LAB Portal"}</span>
+                            <div className="flex flex-wrap gap-4 text-xs font-medium">
+                              {["SUPER_ADMIN", "DOCTOR", "RECEPTIONIST"].map(role => {
+                                const isChecked = allowed.includes(role);
+                                return (
+                                  <label key={role} className="flex items-center gap-2 cursor-pointer select-none">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      disabled={role === "SUPER_ADMIN" && dept === "OP"}
+                                      onChange={() => {
+                                        const updatedAccess = { ...workspaceAccess };
+                                        if (isChecked) {
+                                          updatedAccess[dept] = allowed.filter((r: string) => r !== role);
+                                        } else {
+                                          updatedAccess[dept] = [...allowed, role];
+                                        }
+                                        setWorkspaceAccess(updatedAccess);
+                                      }}
+                                      className="rounded text-blue-600 focus:ring-blue-550/20 border-slate-300 w-4 h-4 cursor-pointer"
+                                    />
+                                    <span>{role === "SUPER_ADMIN" ? "Super Admin" : role === "DOCTOR" ? "Doctor" : "Receptionist"}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

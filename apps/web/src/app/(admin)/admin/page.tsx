@@ -102,6 +102,30 @@ export default function AdminPortal() {
   const [pinError, setPinError] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
+  const [dbSecurityPin, setDbSecurityPin] = useState("1234");
+  const [dbWorkspaceAccess, setDbWorkspaceAccess] = useState<any>({
+    OP: ["SUPER_ADMIN", "RECEPTIONIST"],
+    DOCTOR: ["SUPER_ADMIN", "DOCTOR"],
+    LAB: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"]
+  });
+
+  const fetchSecuritySettings = async (token: string) => {
+    try {
+      const res = await fetch(`${API_URL}/admin/settings`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          if (json.data.securityPin) setDbSecurityPin(json.data.securityPin);
+          if (json.data.workspaceAccess) setDbWorkspaceAccess(json.data.workspaceAccess);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load security settings:", err);
+    }
+  };
+
   useEffect(() => {
     // Auth check on mount
     const token = localStorage.getItem("adminToken");
@@ -115,6 +139,7 @@ export default function AdminPortal() {
       try { 
         setUser(JSON.parse(userStr)); 
         setAuthStatus("authenticated");
+        fetchSecuritySettings(token);
       } catch {
         setAuthStatus("unauthenticated");
       }
@@ -169,9 +194,9 @@ export default function AdminPortal() {
     setIsVerifying(true);
     setPinError(false);
     
-    // Simulate API PIN verification (Accept 1234)
+    // Verify against database PIN
     setTimeout(() => {
-      if (pin === "1234") {
+      if (pin === dbSecurityPin) {
         if (pinModalDept) {
           localStorage.setItem("adminDepartment", pinModalDept.id);
           router.push(pinModalDept.redirectTo);
@@ -274,7 +299,13 @@ export default function AdminPortal() {
 
   // ─── PORTAL VIEW ────────────────────────────────────────────────────────────
   const userRole = user?.role || "RECEPTIONIST";
-  const allowedDepts = ROLE_NAV_MAP[userRole] || ["OP"];
+  const allowedDepts = Object.keys(dbWorkspaceAccess).filter(deptId => {
+    const roles = dbWorkspaceAccess[deptId] || [];
+    return roles.includes(userRole);
+  });
+  if (userRole === "SUPER_ADMIN" && !allowedDepts.includes("ALL")) {
+    allowedDepts.push("ALL");
+  }
   const availableDepts = DEPARTMENTS.filter(d => allowedDepts.includes(d.id));
 
   const roleLabel: Record<string, string> = {

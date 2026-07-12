@@ -337,6 +337,8 @@ model SiteSettings {
   seoTitle        String?
   seoDescription  String?
   analyticsId     String?
+  securityPin     String @default("1234")
+  workspaceAccess Json?  // { OP: string[], DOCTOR: string[], LAB: string[] }
   updatedAt       DateTime @updatedAt
 }
 

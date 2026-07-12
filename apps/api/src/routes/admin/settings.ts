@@ -34,6 +34,12 @@ const UpdateSettingsSchema = z.object({
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
   analyticsId: z.string().optional().nullable(),
+  securityPin: z.string().min(4).max(8).optional(),
+  workspaceAccess: z.object({
+    OP: z.array(z.string()),
+    DOCTOR: z.array(z.string()),
+    LAB: z.array(z.string())
+  }).optional().nullable(),
 });
 
 const CreateHolidaySchema = z.object({
@@ -78,7 +84,13 @@ async function getOrCreateSettings() {
         ],
         seoTitle: 'Heshvitha Multi Speciality Dental Clinic',
         seoDescription: 'Leading dental care and treatments in Hyderabad.',
-        analyticsId: 'G-XXXXXXXXXX'
+        analyticsId: 'G-XXXXXXXXXX',
+        securityPin: '1234',
+        workspaceAccess: {
+          OP: ["SUPER_ADMIN", "RECEPTIONIST"],
+          DOCTOR: ["SUPER_ADMIN", "DOCTOR"],
+          LAB: ["SUPER_ADMIN", "RECEPTIONIST", "DOCTOR"]
+        }
       }
     });
   }
@@ -108,7 +120,8 @@ router.put('/', async (req, res, next) => {
       data: {
         ...body,
         socialLinks: body.socialLinks,
-        workingHours: body.workingHours as any
+        workingHours: body.workingHours as any,
+        workspaceAccess: body.workspaceAccess as any
       }
     });
 
