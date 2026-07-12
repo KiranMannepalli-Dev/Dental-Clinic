@@ -18,6 +18,9 @@ export default function PatientsAdmin() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [filterGender, setFilterGender] = useState("");
+  const [filterBloodGroup, setFilterBloodGroup] = useState("");
+  const [sortBy, setSortBy] = useState("name-asc");
 
   // New Patient Form states
   const [isAddingPatient, setIsAddingPatient] = useState(false);
@@ -611,6 +614,32 @@ export default function PatientsAdmin() {
     }
   };
 
+  // Client-side filtering and sorting for patients list
+  const filteredPatients = patients
+    .filter((pat) => {
+      if (filterGender && pat.gender !== filterGender) return false;
+      if (filterBloodGroup && pat.bloodGroup !== filterBloodGroup) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name-asc") {
+        return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+      }
+      if (sortBy === "name-desc") {
+        return `${b.firstName} ${b.lastName}`.localeCompare(`${a.firstName} ${a.lastName}`);
+      }
+      if (sortBy === "date-desc") {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      if (sortBy === "date-asc") {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
+      if (sortBy === "visits-desc") {
+        return (b._count?.appointments || 0) - (a._count?.appointments || 0);
+      }
+      return 0;
+    });
+
   return (
     <div className="space-y-6">
       {/* Feedback banner */}
@@ -643,20 +672,73 @@ export default function PatientsAdmin() {
           </button>
         </div>
 
-        <form onSubmit={handleSearchSubmit} className="flex gap-3 pt-2">
-          <div className="relative flex-grow">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Search by Patient name, Email, Phone..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-slate-205 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-blue-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100" 
-            />
+        <form onSubmit={handleSearchSubmit} className="space-y-3 pt-2">
+          <div className="flex gap-3">
+            <div className="relative flex-grow">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text" 
+                placeholder="Search by Patient name, Email, Phone..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 border border-slate-205 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-blue-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100" 
+              />
+            </div>
+            <button type="submit" className="px-6 py-2 bg-slate-950 dark:bg-slate-850 text-white dark:text-slate-100 text-xs font-semibold rounded-md hover:bg-slate-900 dark:hover:bg-slate-800 transition-all duration-200 shadow-sm cursor-pointer">
+              Search
+            </button>
           </div>
-          <button type="submit" className="px-6 py-2 bg-slate-950 dark:bg-slate-850 text-white dark:text-slate-100 text-xs font-semibold rounded-md hover:bg-slate-900 dark:hover:bg-slate-800 transition-all duration-200 shadow-sm cursor-pointer">
-            Search
-          </button>
+
+          <div className="flex flex-wrap items-center gap-4 text-xs pt-1 border-t border-slate-100 dark:border-slate-800/60">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-450 font-medium">Gender:</span>
+              <select
+                value={filterGender}
+                onChange={(e) => { setFilterGender(e.target.value); setPage(1); }}
+                className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold"
+              >
+                <option value="">All Genders</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+                <option value="PREFER_NOT_TO_SAY">Prefer Not to Say</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 dark:text-slate-450 font-medium">Blood Group:</span>
+              <select
+                value={filterBloodGroup}
+                onChange={(e) => { setFilterBloodGroup(e.target.value); setPage(1); }}
+                className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold"
+              >
+                <option value="">All Blood Groups</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5 sm:ml-auto">
+              <span className="text-slate-500 dark:text-slate-450 font-medium">Sort By:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold"
+              >
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+                <option value="date-desc">Newest Registered</option>
+                <option value="date-asc">Oldest Registered</option>
+                <option value="visits-desc">Most Visits</option>
+              </select>
+            </div>
+          </div>
         </form>
       </div>
 
@@ -678,12 +760,12 @@ export default function PatientsAdmin() {
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-slate-400 dark:text-slate-550 text-xs italic">Loading Patients...</td>
                 </tr>
-              ) : patients.length === 0 ? (
+              ) : filteredPatients.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-400 dark:text-slate-550 text-xs italic">No Patient Records Found.</td>
+                  <td colSpan={5} className="p-8 text-center text-slate-400 dark:text-slate-550 text-xs italic">No Patient Records Match Selected Filters.</td>
                 </tr>
               ) : (
-                patients.map((pat) => (
+                filteredPatients.map((pat) => (
                   <tr key={pat.id} className="hover:bg-slate-55/40 dark:hover:bg-slate-800/30 transition-colors">
                     <td className="p-4">
                       <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm">

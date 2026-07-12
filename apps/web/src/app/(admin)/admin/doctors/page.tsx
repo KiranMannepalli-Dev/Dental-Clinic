@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Users, Plus, Edit2, Trash2, Calendar, Star, Check, X,
-  Clock, Save, ShieldAlert, Award, FileText, CheckSquare, User2
+  Clock, Save, ShieldAlert, Award, FileText, CheckSquare, User2, Search
 } from "lucide-react";
 
 
@@ -34,6 +34,11 @@ export default function DoctorsAdmin() {
   const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterSpecialization, setFilterSpecialization] = useState("");
+  const [filterStatus, setFilterStatus] = useState("ALL");
+  const [filterFeatured, setFilterFeatured] = useState("ALL");
+  const [sortBy, setSortBy] = useState("name-asc");
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   // Modals state
@@ -340,6 +345,53 @@ export default function DoctorsAdmin() {
     setSchedule(updated);
   };
 
+  // Get all unique specializations for the filter dropdown
+  const specializations = Array.from(new Set(doctors.map(d => d.specialization).filter(Boolean)));
+
+  // Client-side filtering and sorting for doctors
+  const filteredDoctors = doctors
+    .filter(doc => {
+      const fullName = `${doc.firstName} ${doc.lastName}`.toLowerCase();
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = fullName.includes(query) || 
+        doc.specialization.toLowerCase().includes(query) || 
+        doc.email.toLowerCase().includes(query) ||
+        (doc.qualification && doc.qualification.toLowerCase().includes(query));
+        
+      if (!matchesSearch) return false;
+      
+      if (filterSpecialization && doc.specialization !== filterSpecialization) return false;
+      
+      if (filterStatus === "ACTIVE" && !doc.isActive) return false;
+      if (filterStatus === "INACTIVE" && doc.isActive) return false;
+      
+      if (filterFeatured === "FEATURED" && !doc.isFeatured) return false;
+      if (filterFeatured === "STANDARD" && doc.isFeatured) return false;
+      
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name-asc") {
+        return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+      }
+      if (sortBy === "name-desc") {
+        return `${b.firstName} ${b.lastName}`.localeCompare(`${a.firstName} ${a.lastName}`);
+      }
+      if (sortBy === "experience-desc") {
+        return b.experience - a.experience;
+      }
+      if (sortBy === "fee-asc") {
+        return parseFloat(a.consultationFee) - parseFloat(b.consultationFee);
+      }
+      if (sortBy === "fee-desc") {
+        return parseFloat(b.consultationFee) - parseFloat(a.consultationFee);
+      }
+      if (sortBy === "rating-desc") {
+        return b.rating - a.rating;
+      }
+      return 0;
+    });
+
   return (
     <div className="space-y-6">
       {/* Top action header */}
@@ -365,6 +417,80 @@ export default function DoctorsAdmin() {
         </div>
       )}
 
+      {/* Search and Filters Bar */}
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm p-5 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/85 space-y-4 hover:shadow-md transition-all duration-300">
+        <div className="flex gap-3">
+          <div className="relative flex-grow">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input 
+              type="text" 
+              placeholder="Search by Specialist Name, Email, Specialization, or Qualification..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-slate-205 dark:border-slate-800 rounded-md text-xs focus:outline-none focus:border-blue-500 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium" 
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 text-xs pt-1 border-t border-slate-100 dark:border-slate-800/60">
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500 dark:text-slate-450 font-medium">Specialization:</span>
+            <select
+              value={filterSpecialization}
+              onChange={(e) => setFilterSpecialization(e.target.value)}
+              className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold"
+            >
+              <option value="">All Specializations</option>
+              {specializations.map((spec) => (
+                <option key={spec} value={spec}>{spec}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500 dark:text-slate-450 font-medium">Status:</span>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active Only</option>
+              <option value="INACTIVE">Inactive Only</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-slate-500 dark:text-slate-450 font-medium">Type:</span>
+            <select
+              value={filterFeatured}
+              onChange={(e) => setFilterFeatured(e.target.value)}
+              className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold"
+            >
+              <option value="ALL">All Standards</option>
+              <option value="FEATURED">Featured Only</option>
+              <option value="STANDARD">Standard Only</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:ml-auto">
+            <span className="text-slate-500 dark:text-slate-450 font-medium">Sort By:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="border border-slate-200 dark:border-slate-800 rounded-md p-1 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-blue-500 font-semibold"
+            >
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="experience-desc">Most Experience</option>
+              <option value="fee-asc">Fee (Low to High)</option>
+              <option value="fee-desc">Fee (High to Low)</option>
+              <option value="rating-desc">Highest Rated</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       {/* Table grid */}
       <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/85 overflow-hidden hover:shadow-md transition-all duration-300">
         <div className="overflow-x-auto">
@@ -384,12 +510,12 @@ export default function DoctorsAdmin() {
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-slate-400 dark:text-slate-550 text-xs italic">Loading Specialists...</td>
                 </tr>
-              ) : doctors.length === 0 ? (
+              ) : filteredDoctors.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-slate-400 dark:text-slate-550 text-xs italic">No Specialists Registered.</td>
+                  <td colSpan={6} className="p-8 text-center text-slate-400 dark:text-slate-550 text-xs italic">No Specialists Match Selected Filters.</td>
                 </tr>
               ) : (
-                doctors.map((doc) => (
+                filteredDoctors.map((doc) => (
                   <tr key={doc.id} className="hover:bg-slate-50/40 dark:hover:bg-slate-800/30 transition-colors duration-150">
                     {/* Details */}
                     <td className="p-4">
