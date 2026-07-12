@@ -7,7 +7,7 @@ import {
   FlaskConical, ClipboardList, TestTube2, Microscope,
   FileText, Calendar, CheckCircle, Clock, AlertCircle,
   RefreshCw, Download, Plus, Search, ArrowLeft, Printer,
-  Check, UploadCloud, CalendarDays, Eye, Trash2
+  Check, UploadCloud, CalendarDays, Eye, Trash2, Edit
 } from "lucide-react";
 
 import { FileUpload } from "@/components/ui/FileUpload";
@@ -55,6 +55,9 @@ export default function LabDashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<LabOrder | null>(null);
+  const [archiveSearch, setArchiveSearch] = useState("");
+  const [archiveCategory, setArchiveCategory] = useState("all");
+  const [archiveSort, setArchiveSort] = useState("date-desc");
 
   // Order Completion form
   const [completingOrderId, setCompletingOrderId] = useState<string | null>(null);
@@ -443,53 +446,138 @@ export default function LabDashboard() {
       )}
 
       {/* ─── Tab Content: File Uploads View ─── */}
-      {labActiveTab === "file_uploads" && (
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-6">
-          <div>
-            <h3 className="font-bold text-slate-800 text-base">Lab Report & Image Archive</h3>
-            <p className="text-xs text-slate-450 mt-0.5">Quickly view or access raw files uploaded to Cloudinary for lab findings.</p>
-          </div>
+      {labActiveTab === "file_uploads" && (() => {
+        // Filter and sort the completed files list locally
+        const uploadedOrders = orders
+          .filter(o => o.fileUrl)
+          .filter(o => {
+            const matchSearch = archiveSearch === "" ||
+              o.patientName.toLowerCase().includes(archiveSearch.toLowerCase()) ||
+              o.testName.toLowerCase().includes(archiveSearch.toLowerCase()) ||
+              o.id.toLowerCase().includes(archiveSearch.toLowerCase());
+            
+            const matchCategory = archiveCategory === "all" || 
+              o.testName.toLowerCase().includes(archiveCategory.toLowerCase()) ||
+              (o.notes && o.notes.toLowerCase().includes(archiveCategory.toLowerCase()));
+            
+            return matchSearch && matchCategory;
+          })
+          .sort((a, b) => {
+            if (archiveSort === "date-desc") {
+              return new Date(b.completedAt || b.orderedAt).getTime() - new Date(a.completedAt || a.orderedAt).getTime();
+            }
+            if (archiveSort === "date-asc") {
+              return new Date(a.completedAt || a.orderedAt).getTime() - new Date(b.completedAt || b.orderedAt).getTime();
+            }
+            if (archiveSort === "name-asc") {
+              return a.patientName.localeCompare(b.patientName);
+            }
+            return 0;
+          });
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {orders.filter(o => o.fileUrl).length === 0 ? (
-              <div className="col-span-full py-12 text-center border border-dashed border-slate-200 rounded-2xl text-slate-400 italic text-sm">
-                No report files uploaded yet. Complete an order to upload a file!
+        return (
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 dark:border-slate-800/85 shadow-sm p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+              <div>
+                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base">Lab Report & Image Archive</h3>
+                <p className="text-xs text-slate-450 dark:text-slate-400 mt-0.5">Quickly view or access raw files uploaded to Cloudinary for lab findings.</p>
               </div>
-            ) : (
-              orders.filter(o => o.fileUrl).map(o => (
-                <div key={o.id} className="border border-slate-200/65 dark:border-slate-800/60 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col justify-between hover:shadow-md transition-all">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-mono text-[10px] font-bold text-violet-650 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 px-2 py-0.5 rounded border border-violet-150 dark:border-violet-900/40">{o.id}</span>
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">{new Date(o.completedAt || o.orderedAt).toLocaleDateString("en-IN")}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-1">{o.patientName}</h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{o.testName}</p>
-                    </div>
-                    {o.result && (
-                      <p className="text-xs bg-emerald-50 dark:bg-emerald-950/20 text-emerald-850 dark:text-emerald-450 p-2 rounded-lg border border-emerald-150 dark:border-emerald-900/30 line-clamp-2">
-                        {o.result}
-                      </p>
-                    )}
-                  </div>
+            </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-150 dark:border-slate-850 flex gap-2">
-                    <a
-                      href={o.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex-1 py-1.5 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900 text-violet-750 dark:text-violet-400 text-xs font-bold rounded-lg border border-violet-200/50 dark:border-violet-800 text-center flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5" /> View File
-                    </a>
-                  </div>
+            {/* Archive Filters bar */}
+            <div className="flex flex-wrap items-center gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200/50 dark:border-slate-850 text-xs">
+              <div className="relative flex-grow min-w-[200px]">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search by Patient name, test or ID..."
+                  value={archiveSearch}
+                  onChange={e => setArchiveSearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 border border-slate-205 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-violet-500 font-medium"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 dark:text-slate-450 font-bold">Category:</span>
+                <select
+                  value={archiveCategory}
+                  onChange={e => setArchiveCategory(e.target.value)}
+                  className="border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-violet-500 font-semibold"
+                >
+                  <option value="all">All Categories</option>
+                  <option value="X-Ray">Dental X-Ray</option>
+                  <option value="Scan">CBCT Scan</option>
+                  <option value="Blood">Blood Test</option>
+                  <option value="Biopsy">Oral Biopsy</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 dark:text-slate-450 font-bold">Sort By:</span>
+                <select
+                  value={archiveSort}
+                  onChange={e => setArchiveSort(e.target.value)}
+                  className="border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-violet-500 font-semibold"
+                >
+                  <option value="date-desc">Newest First</option>
+                  <option value="date-asc">Oldest First</option>
+                  <option value="name-asc">Patient Name (A-Z)</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {uploadedOrders.length === 0 ? (
+                <div className="col-span-full py-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 dark:text-slate-500 italic text-sm">
+                  No matching archived reports found.
                 </div>
-              ))
-            )}
+              ) : (
+                uploadedOrders.map(o => (
+                  <div key={o.id} className="border border-slate-200/65 dark:border-slate-800/60 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col justify-between hover:shadow-md transition-all">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono text-[10px] font-bold text-violet-650 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40 px-2 py-0.5 rounded border border-violet-150 dark:border-violet-900/40">{o.id}</span>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-550">{new Date(o.completedAt || o.orderedAt).toLocaleDateString("en-IN")}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-1">{o.patientName}</h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">{o.testName}</p>
+                      </div>
+                      {o.result && (
+                        <p className="text-xs bg-emerald-50 dark:bg-emerald-950/20 text-emerald-850 dark:text-emerald-450 p-2 rounded-lg border border-emerald-150 dark:border-emerald-900/30 line-clamp-2">
+                          {o.result}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-150 dark:border-slate-850 flex gap-2">
+                      <a
+                        href={o.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex-grow py-1.5 bg-violet-50 dark:bg-violet-950/40 hover:bg-violet-100 dark:hover:bg-violet-900 text-violet-750 dark:text-violet-400 text-xs font-bold rounded-lg border border-violet-200/50 dark:border-violet-800 text-center flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> View File
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCompletingOrderId(o.id);
+                          setResultNotes(o.result || "");
+                          setResultFileUrl(o.fileUrl || "");
+                        }}
+                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Edit className="w-3.5 h-3.5" /> Edit
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ─── Tab Content: Daily Schedules ─── */}
       {labActiveTab === "daily_schedules" && (
@@ -675,6 +763,7 @@ export default function LabDashboard() {
       {completingOrderId && (() => {
         const order = orders.find(o => o.id === completingOrderId);
         if (!order) return null;
+        const isEditing = order.status === "COMPLETED" || order.status === "REPORTED";
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
             <div className="bg-[#0f1117] rounded-2xl shadow-2xl border border-slate-800 w-full max-w-md">
@@ -682,7 +771,7 @@ export default function LabDashboard() {
               <div className="p-5 border-b border-slate-800 flex justify-between items-center">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-violet-400 mb-0.5">{order.id}</p>
-                  <h3 className="font-bold text-white text-base">Complete Lab Order</h3>
+                  <h3 className="font-bold text-white text-base">{isEditing ? "Edit Lab Findings" : "Complete Lab Order"}</h3>
                   <p className="text-xs text-slate-400">{order.patientName} — {order.testName}</p>
                 </div>
                 <button onClick={() => setCompletingOrderId(null)} className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer">
@@ -732,7 +821,7 @@ export default function LabDashboard() {
                     type="submit"
                     className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl text-sm cursor-pointer shadow-lg shadow-violet-500/20 flex items-center justify-center gap-1.5 transition-all"
                   >
-                    <CheckCircle className="w-4 h-4" /> Mark as Completed
+                    <CheckCircle className="w-4 h-4" /> {isEditing ? "Save Findings" : "Mark as Completed"}
                   </button>
                 </div>
               </form>
