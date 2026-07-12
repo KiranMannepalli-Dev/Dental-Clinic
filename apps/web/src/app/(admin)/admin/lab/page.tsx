@@ -58,6 +58,8 @@ export default function LabDashboard() {
   const [archiveSearch, setArchiveSearch] = useState("");
   const [archiveCategory, setArchiveCategory] = useState("all");
   const [archiveSort, setArchiveSort] = useState("date-desc");
+  const [archiveStartDate, setArchiveStartDate] = useState("");
+  const [archiveEndDate, setArchiveEndDate] = useState("");
 
   // Order Completion form
   const [completingOrderId, setCompletingOrderId] = useState<string | null>(null);
@@ -459,6 +461,19 @@ export default function LabDashboard() {
             const matchCategory = archiveCategory === "all" || 
               o.testName.toLowerCase().includes(archiveCategory.toLowerCase()) ||
               (o.notes && o.notes.toLowerCase().includes(archiveCategory.toLowerCase()));
+
+            if (archiveStartDate) {
+              const start = new Date(archiveStartDate);
+              start.setHours(0, 0, 0, 0);
+              const orderDate = new Date(o.completedAt || o.orderedAt);
+              if (orderDate < start) return false;
+            }
+            if (archiveEndDate) {
+              const end = new Date(archiveEndDate);
+              end.setHours(23, 59, 59, 999);
+              const orderDate = new Date(o.completedAt || o.orderedAt);
+              if (orderDate > end) return false;
+            }
             
             return matchSearch && matchCategory;
           })
@@ -510,6 +525,26 @@ export default function LabDashboard() {
                   <option value="Blood">Blood Test</option>
                   <option value="Biopsy">Oral Biopsy</option>
                 </select>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 dark:text-slate-455 font-bold">From:</span>
+                <input
+                  type="date"
+                  value={archiveStartDate}
+                  onChange={e => setArchiveStartDate(e.target.value)}
+                  className="border border-slate-200 dark:border-slate-800 rounded-lg p-1 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-violet-500 font-semibold"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 dark:text-slate-455 font-bold">To:</span>
+                <input
+                  type="date"
+                  value={archiveEndDate}
+                  onChange={e => setArchiveEndDate(e.target.value)}
+                  className="border border-slate-200 dark:border-slate-800 rounded-lg p-1 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-250 focus:outline-none focus:border-violet-500 font-semibold"
+                />
               </div>
 
               <div className="flex items-center gap-1.5">
